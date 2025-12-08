@@ -2,9 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  int selectedindex = 0;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -26,199 +32,285 @@ class HomeScreen extends StatelessWidget {
             padding: EdgeInsets.only(right: 15),
             child: CircleAvatar(
               radius: 20.0,
-              backgroundColor: Colors.green,
+              backgroundColor: Colors.black,
+
               backgroundImage: AssetImage('images/Profile.jpg'),
             ),
           ),
         ],
       ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: selectedindex,
+        backgroundColor: Colors.white,
+        selectedItemColor: Colors.black,
+        unselectedItemColor: Colors.grey,
+        showSelectedLabels: true,
+        onTap: (index) {
+          setState(() {
+            selectedindex = index;
+          });
+
+          if (index == 0) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => HomeScreen()),
+            );
+          }
+          if (index == 1) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => HomeScreen()),
+            );
+          }
+          if (index == 2) {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => HomeScreen()),
+            );
+          }
+        },
+        items: [
+          BottomNavigationBarItem(
+            icon: Icon(
+              Icons.home_filled,
+              color: selectedindex == 0 ? Colors.redAccent : Colors.black,
+            ),
+            label: "Home",
+          ),
+
+          BottomNavigationBarItem(
+            icon: Icon(
+              Icons.search,
+              color: selectedindex == 2 ? Colors.redAccent : Colors.black,
+            ),
+            label: "Search",
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(
+              Icons.favorite_border,
+              color: selectedindex == 1 ? Colors.redAccent : Colors.black,
+            ),
+            label: "Favorites",
+          ),
+        ],
+      ),
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: 15),
-
-              /// HEADER
-              Text(
-                "Hello, John",
-                style: GoogleFonts.poppins(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black,
-                ),
-              ),
-              SizedBox(height: 4),
-              Text(
-                "Find your dream car",
-                style: GoogleFonts.poppins(
-                  fontSize: 15,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-
-              SizedBox(height: 20),
-
-              /// SEARCH BAR
-              Container(
-                padding: EdgeInsets.symmetric(horizontal: 15),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade200,
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.search, color: Colors.grey.shade600),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: TextField(
-                        style: TextStyle(color: Colors.black87),
-                        decoration: InputDecoration(
-                          hintText: "Search for your dream car",
-                          border: InputBorder.none,
-                        ),
-                      ),
-                    ),
-                    Icon(Icons.tune_rounded, color: Colors.redAccent),
+        child: Column(
+          children: [
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.fromLTRB(20, 50, 20, 30),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color.fromARGB(255, 195, 63, 76),
+                    Color.fromARGB(255, 17, 9, 23),
                   ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(25),
+                  bottomRight: Radius.circular(25),
                 ),
               ),
-
-              SizedBox(height: 25),
-
-              /// CATEGORIES
-              Text(
-                "Categories",
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black,
-                ),
-              ),
-              SizedBox(height: 15),
-
-              Scrollable(
-                viewportBuilder:
-                    (BuildContext context, ViewportOffset position) {
-                      return SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: [
-                            _categoryChip("All", true),
-                            SizedBox(width: 10),
-                            _categoryChip("Tesla", false),
-                            SizedBox(width: 10),
-                            _categoryChip("BMW", false),
-                            SizedBox(width: 10),
-                            _categoryChip("Mercedes", false),
-                            SizedBox(width: 10),
-                            _categoryChip("Audi", false),
-                          ],
-                        ),
-                      );
-                    },
-                // children: [
-                //   Row(
-                //     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                //     children: [
-                //       _categoryChip("All", true),
-                //       _categoryChip("Tesla", false),
-                //       _categoryChip("BMW", false),
-                //       _categoryChip("Mercedes", false),
-                //       _categoryChip("Mercedes", false),
-                //     ],
-                //   ),
-                // ],
-              ),
-
-              SizedBox(height: 30),
-
-              /// FEATURED CARS
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Featured Cars",
+                    "Syed Noman Shariq",
                     style: GoogleFonts.poppins(
-                      fontSize: 18,
+                      fontSize: 26,
+                      color: Colors.white,
                       fontWeight: FontWeight.w600,
-                      color: Colors.black,
                     ),
                   ),
-                  TextButton(
-                    onPressed: () {},
-                    child: Text(
-                      "View All",
-                      style: TextStyle(color: Colors.redAccent),
+                  SizedBox(height: 5),
+                  Text(
+                    "Find your dream car",
+                    style: GoogleFonts.poppins(
+                      fontSize: 15,
+                      color: Colors.white70,
+                    ),
+                  ),
+                  SizedBox(height: 20),
+
+                  // SEARCH BAR
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 15),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.search, color: Colors.grey.shade600),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: TextField(
+                            style: TextStyle(color: Colors.black87),
+                            decoration: InputDecoration(
+                              hintText: "Search for your dream car",
+                              border: InputBorder.none,
+                            ),
+                          ),
+                        ),
+                        Icon(Icons.tune_rounded, color: Colors.redAccent),
+                      ],
                     ),
                   ),
                 ],
               ),
-              SizedBox(height: 15),
-
-              /// FEATURED CAR CARDS
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.symmetric(horizontal: 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _featuredCar(
-                      image: "images/Mercedes.jpg",
-                      name: "Tesla Model 3",
-                      rating: "4.8",
-                      price: "100.0/day",
+                    SizedBox(height: 30),
+                    Text(
+                      "Categories",
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                      ),
                     ),
-                    SizedBox(width: 15),
-                    _featuredCar(
-                      image: "images/Mercedes.jpg",
-                      name: "BMW M4",
-                      rating: "4.9",
-                      price: "150.0/day",
+                    SizedBox(height: 15),
+
+                    Scrollable(
+                      viewportBuilder:
+                          (BuildContext context, ViewportOffset position) {
+                            return SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: [
+                                  _categoryChip("All", true),
+                                  SizedBox(width: 10),
+                                  _categoryChip("Tesla", false),
+                                  SizedBox(width: 10),
+                                  _categoryChip("BMW", false),
+                                  SizedBox(width: 10),
+                                  _categoryChip("Mercedes", false),
+                                  SizedBox(width: 10),
+                                  _categoryChip("Audi", false),
+                                ],
+                              ),
+                            );
+                          },
+                      // children: [
+                      //   Row(
+                      //     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      //     children: [
+                      //       _categoryChip("All", true),
+                      //       _categoryChip("Tesla", false),
+                      //       _categoryChip("BMW", false),
+                      //       _categoryChip("Mercedes", false),
+                      //       _categoryChip("Mercedes", false),
+                      //     ],
+                      //   ),
+                      // ],
                     ),
-                    SizedBox(width: 15),
-                    _featuredCar(
-                      image: "images/Mercedes.jpg",
-                      name: "BMW M4",
-                      rating: "4.9",
-                      price: "150.0/day",
+
+                    SizedBox(height: 30),
+
+                    /// FEATURED CARS
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Featured Cars",
+                          style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black,
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {},
+                          child: Text(
+                            "View All",
+                            style: TextStyle(color: Colors.redAccent),
+                          ),
+                        ),
+                      ],
                     ),
+                    SizedBox(height: 15),
+
+                    /// FEATURED CAR CARDS
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          _featuredCar(
+                            image: "images/Mercedes.jpg",
+                            name: "Tesla Model 3",
+                            rating: "4.8",
+                            price: "100.0/day",
+                          ),
+                          SizedBox(width: 15),
+                          _featuredCar(
+                            image: "images/Mercedes.jpg",
+                            name: "BMW M4",
+                            rating: "4.9",
+                            price: "150.0/day",
+                          ),
+                          SizedBox(width: 15),
+                          _featuredCar(
+                            image: "images/Mercedes.jpg",
+                            name: "BMW M4",
+                            rating: "4.9",
+                            price: "150.0/day",
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    SizedBox(height: 30),
+
+                    /// POPULAR DEALS TITLE
+                    Text(
+                      "Popular Deals",
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
+                      ),
+                    ),
+
+                    SizedBox(height: 20),
+
+                    /// POPULAR DEALS LIST
+                    _popularDeal(
+                      "Tesla",
+                      "Tesla Model 3",
+                      "4.8",
+                      "100.0/day",
+                      "images/Mercedes.jpg",
+                    ),
+                    _popularDeal(
+                      "BMW",
+                      "BMW M4",
+                      "4.9",
+                      "150.0/day",
+                      "images/Mercedes.jpg",
+                    ),
+                    _popularDeal(
+                      "Mercedes",
+                      "Mercedes C class",
+                      "4.7",
+                      "200.0/day",
+                      "images/Mercedes.jpg",
+                    ),
+
+                    SizedBox(height: 30),
                   ],
                 ),
               ),
-
-              SizedBox(height: 30),
-
-              /// POPULAR DEALS TITLE
-              Text(
-                "Popular Deals",
-                style: GoogleFonts.poppins(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black,
-                ),
-              ),
-
-              SizedBox(height: 20),
-
-              /// POPULAR DEALS LIST
-              _popularDeal(
-                "Tesla Model 3",
-                "4.8",
-                "100.0/day",
-                "images/Mercedes.jpg",
-              ),
-              _popularDeal("BMW M4", "4.9", "150.0/day", "images/Mercedes.jpg"),
-              _popularDeal(
-                "Mercedes AMG GT",
-                "4.7",
-                "200.0/day",
-                "images/Mercedes.jpg",
-              ),
-
-              SizedBox(height: 30),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -307,7 +399,13 @@ class HomeScreen extends StatelessWidget {
   }
 
   /// POPULAR DEAL LIST TILE
-  Widget _popularDeal(String name, String rating, String price, String image) {
+  Widget _popularDeal(
+    String subname,
+    String name,
+    String rating,
+    String price,
+    String image,
+  ) {
     return Container(
       margin: EdgeInsets.only(bottom: 18),
       padding: EdgeInsets.all(12),
@@ -329,6 +427,14 @@ class HomeScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Text(
+                  subname,
+                  style: GoogleFonts.poppins(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey,
+                  ),
+                ),
                 Text(
                   name,
                   style: GoogleFonts.poppins(
