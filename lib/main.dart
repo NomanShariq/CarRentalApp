@@ -1,3 +1,4 @@
+import 'package:car_rental_app/screens/cardetail_screen.dart';
 import 'package:car_rental_app/screens/home_screen.dart';
 import 'package:car_rental_app/screens/login_screen.dart';
 import 'package:car_rental_app/screens/profile_screen.dart';
@@ -28,7 +29,8 @@ class MyApp extends StatelessWidget {
         '/profile': (context) => ProfileScreen(),
         '/welcome': (context) => const WelcomeScreen(),
         // // Route 4: Details screen
-        // '/details': (context) => const DetailsScreen(),
+        '/details': (context) =>
+            CarDetailScreen(image: '', name: '', rating: '', price: ''),
         // Route 5: Login screen
         '/login': (context) => LoginScreen(),
         // Route 5: SignUp screen

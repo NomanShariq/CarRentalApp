@@ -1,3 +1,5 @@
+import 'package:car_rental_app/screens/addnewcar_screen.dart';
+import 'package:car_rental_app/screens/cardetail_screen.dart';
 import 'package:car_rental_app/screens/profile_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -85,7 +87,6 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: const Icon(Icons.menu, color: Colors.black87),
         centerTitle: true,
         title: Text(
           "Car Rental",
@@ -116,41 +117,66 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: selectedindex,
-        backgroundColor: Colors.white,
-        selectedItemColor: Colors.black,
-        unselectedItemColor: Colors.grey,
-        showSelectedLabels: true,
-        onTap: (index) {
-          setState(() {
-            selectedindex = index;
-          });
-          // Navigation logic...
-        },
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.home_filled,
-              color: selectedindex == 0 ? Colors.redAccent : Colors.black,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 20),
+        child: FloatingActionButton(
+          backgroundColor: Colors.redAccent,
+          child: const Icon(Icons.add, color: Colors.white),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => AddNewCarScreen(onCarAdded: (_) {}),
+              ),
+            );
+          },
+        ),
+      ),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(
+              color: Colors.grey.shade300, // 👈 border color
+              width: 1,
             ),
-            label: "Home",
           ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.search,
-              color: selectedindex == 1 ? Colors.redAccent : Colors.black,
+        ),
+        child: BottomNavigationBar(
+          currentIndex: selectedindex,
+          backgroundColor: Colors.white,
+          selectedItemColor: Colors.black,
+          unselectedItemColor: Colors.grey,
+          showSelectedLabels: true,
+          onTap: (index) {
+            setState(() {
+              selectedindex = index;
+            });
+            // Navigation logic...
+          },
+          items: [
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.home_filled,
+                color: selectedindex == 0 ? Colors.redAccent : Colors.black,
+              ),
+              label: "Home",
             ),
-            label: "Search",
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(
-              Icons.favorite_border,
-              color: selectedindex == 2 ? Colors.redAccent : Colors.black,
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.search,
+                color: selectedindex == 1 ? Colors.redAccent : Colors.black,
+              ),
+              label: "Search",
             ),
-            label: "Favorites",
-          ),
-        ],
+            BottomNavigationBarItem(
+              icon: Icon(
+                Icons.favorite_border,
+                color: selectedindex == 2 ? Colors.redAccent : Colors.black,
+              ),
+              label: "Favorites",
+            ),
+          ],
+        ),
       ),
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -405,44 +431,59 @@ class _HomeScreenState extends State<HomeScreen> {
     required String rating,
     required String price,
   }) {
-    return Container(
-      width: 180, // Fixed width for calculating scroll position
-      padding: const EdgeInsets.only(left: 12, right: 12, bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.asset(image, height: 100, width: double.maxFinite),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            name,
-            style: GoogleFonts.poppins(
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-              color: Colors.black,
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CarDetailScreen(
+              image: image,
+              name: name,
+              rating: rating,
+              price: price,
             ),
           ),
-          const SizedBox(height: 5),
-          Row(
-            children: [
-              const Icon(Icons.star, color: Colors.amber, size: 18),
-              const SizedBox(width: 4),
-              Text(rating, style: const TextStyle(color: Colors.black87)),
-            ],
-          ),
-          const SizedBox(height: 5),
-          Text(
-            "\$$price",
-            style: const TextStyle(color: Colors.redAccent, fontSize: 15),
-          ),
-        ],
+        );
+      },
+      child: Container(
+        width: 180, // Fixed width for calculating scroll position
+        padding: const EdgeInsets.only(left: 12, right: 12, bottom: 12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: Colors.grey.shade200),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.asset(image, height: 100, width: double.maxFinite),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              name,
+              style: GoogleFonts.poppins(
+                fontSize: 15,
+                fontWeight: FontWeight.w500,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(height: 5),
+            Row(
+              children: [
+                const Icon(Icons.star, color: Colors.amber, size: 18),
+                const SizedBox(width: 4),
+                Text(rating, style: const TextStyle(color: Colors.black87)),
+              ],
+            ),
+            const SizedBox(height: 5),
+            Text(
+              "\$$price",
+              style: const TextStyle(color: Colors.redAccent, fontSize: 15),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -455,74 +496,101 @@ class _HomeScreenState extends State<HomeScreen> {
     String price,
     String image,
   ) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 18),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
-        ],
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.asset(image, width: 90, height: 60, fit: BoxFit.cover),
-          ),
-          const SizedBox(width: 15),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  subname,
-                  style: GoogleFonts.poppins(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey,
-                  ),
-                ),
-                Text(
-                  name,
-                  style: GoogleFonts.poppins(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w400,
-                    color: Colors.black,
-                  ),
-                ),
-                Row(
-                  children: [
-                    const Icon(Icons.star, color: Colors.amber, size: 18),
-                    const SizedBox(width: 4),
-                    Text(rating, style: const TextStyle(color: Colors.black87)),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  "\$$price",
-                  style: const TextStyle(color: Colors.redAccent),
-                ),
-              ],
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CarDetailScreen(
+              image: image,
+              name: name,
+              rating: rating,
+              price: price,
             ),
           ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.redAccent,
-              elevation: 0,
-              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+        );
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 18),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 4,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.asset(
+                image,
+                width: 90,
+                height: 60,
+                fit: BoxFit.cover,
               ),
             ),
-            onPressed: () {},
-            child: const Text(
-              "Book Now",
-              style: TextStyle(color: Colors.white, fontSize: 13),
+            const SizedBox(width: 15),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    subname,
+                    style: GoogleFonts.poppins(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey,
+                    ),
+                  ),
+                  Text(
+                    name,
+                    style: GoogleFonts.poppins(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.black,
+                    ),
+                  ),
+                  Row(
+                    children: [
+                      const Icon(Icons.star, color: Colors.amber, size: 18),
+                      const SizedBox(width: 4),
+                      Text(
+                        rating,
+                        style: const TextStyle(color: Colors.black87),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    "\$$price",
+                    style: const TextStyle(color: Colors.redAccent),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.redAccent,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              onPressed: () {},
+              child: const Text(
+                "Book Now",
+                style: TextStyle(color: Colors.white, fontSize: 13),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
