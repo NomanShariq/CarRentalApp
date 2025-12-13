@@ -1,5 +1,5 @@
+import 'package:car_rental_app/screens/profile_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -11,13 +11,93 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int selectedindex = 0;
+
+  // --- NEW STATE & CONTROLLER FOR SCROLL INDICATOR ---
+  // Controller for the horizontal scroll view
+  final ScrollController _scrollController = ScrollController();
+  int _currentPage = 0; // Tracks which "page" (set of cards) is visible
+  final double cardWidth =
+      195; // Approximate total width of one card + spacing (180 + 15)
+
+  // Sample data list for the featured cars
+  final List<Map<String, String>> featuredCars = [
+    {
+      "image": "images/Tesla.png",
+      "name": "Tesla Model 3",
+      "rating": "4.8",
+      "price": "100.0/day",
+    },
+    {
+      "image": "images/Mmw-m4.png",
+      "name": "BMW M4",
+      "rating": "4.9",
+      "price": "150.0/day",
+    },
+    {
+      "image": "images/Mercedes.jpg",
+      "name": "Mercedes C Class",
+      "rating": "4.7",
+      "price": "200.0/day",
+    },
+    {
+      "image": "images/Audi.png",
+      "name": "Audi A4",
+      "rating": "4.6",
+      "price": "120.0/day",
+    },
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    // 🔑 Listen for scroll events to update the indicator
+    _scrollController.addListener(_updatePageIndicator);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_updatePageIndicator);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  // 🔑 LOGIC TO UPDATE PAGE INDICATOR BASED ON SCROLL POSITION
+  void _updatePageIndicator() {
+    // Get the current offset of the scroll view
+    double scrollOffset = _scrollController.offset;
+    // Calculate which card is currently aligned near the start (first visible card)
+    int firstVisibleIndex = (scrollOffset / cardWidth).round();
+
+    // We only want 3 indicator dots, so we cap the page index.
+    int maxPages = featuredCars.length - 1;
+
+    // Calculate the 'page' index for the indicator (e.g., first visible card is page 0, second is page 1, etc.)
+    int newPage = 0;
+    if (firstVisibleIndex >= 2) {
+      newPage = 2;
+    } else if (firstVisibleIndex >= 1) {
+      newPage = 1;
+    }
+
+    if (_currentPage != newPage) {
+      setState(() {
+        _currentPage = newPage;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Determine how many pages we need for the indicator.
+    // E.g., if you show 2 cards at a time, 4 items would be 2 pages.
+    // Let's assume a maximum of 3 visual scroll segments for simplicity.
+    int indicatorCount = 3;
+
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        leading: Icon(Icons.menu, color: Colors.black87),
+        leading: const Icon(Icons.menu, color: Colors.black87),
         centerTitle: true,
         title: Text(
           "Car Rental",
@@ -29,12 +109,21 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         actions: [
           Padding(
-            padding: EdgeInsets.only(right: 15),
-            child: CircleAvatar(
-              radius: 20.0,
-              backgroundColor: Colors.black,
-
-              backgroundImage: AssetImage('images/Profile.jpg'),
+            padding: const EdgeInsets.only(right: 15),
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ProfileScreen(),
+                  ),
+                );
+              },
+              child: const CircleAvatar(
+                radius: 20.0,
+                backgroundColor: Colors.black,
+                backgroundImage: AssetImage('images/Profile.jpg'),
+              ),
             ),
           ),
         ],
@@ -49,25 +138,7 @@ class _HomeScreenState extends State<HomeScreen> {
           setState(() {
             selectedindex = index;
           });
-
-          if (index == 0) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => HomeScreen()),
-            );
-          }
-          if (index == 1) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => HomeScreen()),
-            );
-          }
-          if (index == 2) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => HomeScreen()),
-            );
-          }
+          // Navigation logic...
         },
         items: [
           BottomNavigationBarItem(
@@ -77,18 +148,17 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             label: "Home",
           ),
-
           BottomNavigationBarItem(
             icon: Icon(
               Icons.search,
-              color: selectedindex == 2 ? Colors.redAccent : Colors.black,
+              color: selectedindex == 1 ? Colors.redAccent : Colors.black,
             ),
             label: "Search",
           ),
           BottomNavigationBarItem(
             icon: Icon(
               Icons.favorite_border,
-              color: selectedindex == 1 ? Colors.redAccent : Colors.black,
+              color: selectedindex == 2 ? Colors.redAccent : Colors.black,
             ),
             label: "Favorites",
           ),
@@ -100,17 +170,17 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Container(
               width: double.infinity,
-              padding: EdgeInsets.fromLTRB(20, 50, 20, 30),
+              padding: const EdgeInsets.fromLTRB(20, 50, 20, 30),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Color.fromARGB(255, 195, 63, 76),
-                    Color.fromARGB(255, 17, 9, 23),
+                    const Color.fromARGB(255, 195, 63, 76),
+                    const Color.fromARGB(255, 17, 9, 23),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: BorderRadius.only(
+                borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(25),
                   bottomRight: Radius.circular(25),
                 ),
@@ -126,7 +196,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  SizedBox(height: 5),
+                  const SizedBox(height: 5),
                   Text(
                     "Find your dream car",
                     style: GoogleFonts.poppins(
@@ -134,11 +204,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: Colors.white70,
                     ),
                   ),
-                  SizedBox(height: 20),
-
+                  const SizedBox(height: 20),
                   // SEARCH BAR
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 15),
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(15),
@@ -146,8 +215,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Row(
                       children: [
                         Icon(Icons.search, color: Colors.grey.shade600),
-                        SizedBox(width: 10),
-                        Expanded(
+                        const SizedBox(width: 10),
+                        const Expanded(
                           child: TextField(
                             style: TextStyle(color: Colors.black87),
                             decoration: InputDecoration(
@@ -156,7 +225,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                         ),
-                        Icon(Icons.tune_rounded, color: Colors.redAccent),
+                        const Icon(Icons.tune_rounded, color: Colors.redAccent),
                       ],
                     ),
                   ),
@@ -165,11 +234,11 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             Expanded(
               child: SingleChildScrollView(
-                padding: EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(height: 30),
+                    const SizedBox(height: 30),
                     Text(
                       "Categories",
                       style: GoogleFonts.poppins(
@@ -178,43 +247,28 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: Colors.black,
                       ),
                     ),
-                    SizedBox(height: 15),
+                    const SizedBox(height: 15),
 
-                    Scrollable(
-                      viewportBuilder:
-                          (BuildContext context, ViewportOffset position) {
-                            return SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: Row(
-                                children: [
-                                  _categoryChip("All", true),
-                                  SizedBox(width: 10),
-                                  _categoryChip("Tesla", false),
-                                  SizedBox(width: 10),
-                                  _categoryChip("BMW", false),
-                                  SizedBox(width: 10),
-                                  _categoryChip("Mercedes", false),
-                                  SizedBox(width: 10),
-                                  _categoryChip("Audi", false),
-                                ],
-                              ),
-                            );
-                          },
-                      // children: [
-                      //   Row(
-                      //     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      //     children: [
-                      //       _categoryChip("All", true),
-                      //       _categoryChip("Tesla", false),
-                      //       _categoryChip("BMW", false),
-                      //       _categoryChip("Mercedes", false),
-                      //       _categoryChip("Mercedes", false),
-                      //     ],
-                      //   ),
-                      // ],
+                    // CATEGORIES
+                    SizedBox(
+                      height: 40,
+                      child: ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: [
+                          _categoryChip("All", true),
+                          const SizedBox(width: 10),
+                          _categoryChip("Tesla", false),
+                          const SizedBox(width: 10),
+                          _categoryChip("BMW", false),
+                          const SizedBox(width: 10),
+                          _categoryChip("Mercedes", false),
+                          const SizedBox(width: 10),
+                          _categoryChip("Audi", false),
+                        ],
+                      ),
                     ),
 
-                    SizedBox(height: 30),
+                    const SizedBox(height: 30),
 
                     /// FEATURED CARS
                     Row(
@@ -230,45 +284,46 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         TextButton(
                           onPressed: () {},
-                          child: Text(
+                          child: const Text(
                             "View All",
                             style: TextStyle(color: Colors.redAccent),
                           ),
                         ),
                       ],
                     ),
-                    SizedBox(height: 15),
+                    const SizedBox(height: 15),
 
-                    /// FEATURED CAR CARDS
+                    // 🔑 REVERTED: FEATURED CAR CARDS (SingleChildScrollView with ScrollController)
                     SingleChildScrollView(
+                      controller: _scrollController,
                       scrollDirection: Axis.horizontal,
                       child: Row(
-                        children: [
-                          _featuredCar(
-                            image: "images/Mercedes.jpg",
-                            name: "Tesla Model 3",
-                            rating: "4.8",
-                            price: "100.0/day",
-                          ),
-                          SizedBox(width: 15),
-                          _featuredCar(
-                            image: "images/Mercedes.jpg",
-                            name: "BMW M4",
-                            rating: "4.9",
-                            price: "150.0/day",
-                          ),
-                          SizedBox(width: 15),
-                          _featuredCar(
-                            image: "images/Mercedes.jpg",
-                            name: "BMW M4",
-                            rating: "4.9",
-                            price: "150.0/day",
-                          ),
-                        ],
+                        children: featuredCars.map((car) {
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 15),
+                            child: _featuredCar(
+                              image: car["image"]!,
+                              name: car["name"]!,
+                              rating: car["rating"]!,
+                              price: car["price"]!,
+                            ),
+                          );
+                        }).toList(),
                       ),
                     ),
 
-                    SizedBox(height: 30),
+                    const SizedBox(height: 10),
+
+                    // 🔑 DOT INDICATOR ROW
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: List.generate(
+                        indicatorCount, // Use the fixed count for indicators
+                        (index) => _buildDotIndicator(index),
+                      ),
+                    ),
+
+                    const SizedBox(height: 30),
 
                     /// POPULAR DEALS TITLE
                     Text(
@@ -279,8 +334,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: Colors.black,
                       ),
                     ),
-
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
                     /// POPULAR DEALS LIST
                     _popularDeal(
@@ -305,7 +359,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       "images/Mercedes.jpg",
                     ),
 
-                    SizedBox(height: 30),
+                    const SizedBox(height: 30),
                   ],
                 ),
               ),
@@ -316,17 +370,33 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // --- WIDGETS ---
+
+  // 🔑 Dot Indicator Builder (Now relies on the scroll controller logic)
+  Widget _buildDotIndicator(int index) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      margin: const EdgeInsets.symmetric(horizontal: 4.0),
+      height: 8.0,
+      width: _currentPage == index ? 20.0 : 8.0,
+      decoration: BoxDecoration(
+        color: _currentPage == index ? Colors.redAccent : Colors.grey.shade400,
+        borderRadius: BorderRadius.circular(10),
+      ),
+    );
+  }
+
   /// CATEGORY CHIP
   Widget _categoryChip(String text, bool selected) {
     return TextButton(
       style: TextButton.styleFrom(
         padding: EdgeInsets.zero,
-        minimumSize: Size(0, 0),
+        minimumSize: Size.zero,
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       ),
       onPressed: () {},
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: 8, horizontal: 18),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 18),
         decoration: BoxDecoration(
           color: selected ? Colors.redAccent : Colors.grey.shade200,
           borderRadius: BorderRadius.circular(30),
@@ -342,7 +412,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  /// FEATURED CAR CARD
+  /// FEATURED CAR CARD (Re-added fixed width)
   Widget _featuredCar({
     required String image,
     required String name,
@@ -350,28 +420,21 @@ class _HomeScreenState extends State<HomeScreen> {
     required String price,
   }) {
     return Container(
-      width: 180,
-      padding: EdgeInsets.only(left: 12, right: 12, bottom: 12),
+      width: 180, // Fixed width for calculating scroll position
+      padding: const EdgeInsets.only(left: 12, right: 12, bottom: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: Colors.grey.shade200),
-        // boxShadow: [
-        //   BoxShadow(
-        //     color: Colors.black12,
-        //     blurRadius: 4,
-        //     offset: Offset(1, 1),
-        //     spreadRadius: 2,
-        //   ),
-        // ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ClipRRect(
+            borderRadius: BorderRadius.circular(12),
             child: Image.asset(image, height: 100, width: double.maxFinite),
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           Text(
             name,
             style: GoogleFonts.poppins(
@@ -380,18 +443,18 @@ class _HomeScreenState extends State<HomeScreen> {
               color: Colors.black,
             ),
           ),
-          SizedBox(height: 5),
+          const SizedBox(height: 5),
           Row(
             children: [
-              Icon(Icons.star, color: Colors.amber, size: 18),
-              SizedBox(width: 4),
-              Text(rating, style: TextStyle(color: Colors.black87)),
+              const Icon(Icons.star, color: Colors.amber, size: 18),
+              const SizedBox(width: 4),
+              Text(rating, style: const TextStyle(color: Colors.black87)),
             ],
           ),
-          SizedBox(height: 5),
+          const SizedBox(height: 5),
           Text(
             "\$$price",
-            style: TextStyle(color: Colors.redAccent, fontSize: 15),
+            style: const TextStyle(color: Colors.redAccent, fontSize: 15),
           ),
         ],
       ),
@@ -407,12 +470,12 @@ class _HomeScreenState extends State<HomeScreen> {
     String image,
   ) {
     return Container(
-      margin: EdgeInsets.only(bottom: 18),
-      padding: EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 18),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
         ],
       ),
@@ -422,7 +485,7 @@ class _HomeScreenState extends State<HomeScreen> {
             borderRadius: BorderRadius.circular(12),
             child: Image.asset(image, width: 90, height: 60, fit: BoxFit.cover),
           ),
-          SizedBox(width: 15),
+          const SizedBox(width: 15),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -445,13 +508,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 Row(
                   children: [
-                    Icon(Icons.star, color: Colors.amber, size: 18),
-                    SizedBox(width: 4),
-                    Text(rating, style: TextStyle(color: Colors.black87)),
+                    const Icon(Icons.star, color: Colors.amber, size: 18),
+                    const SizedBox(width: 4),
+                    Text(rating, style: const TextStyle(color: Colors.black87)),
                   ],
                 ),
-                SizedBox(height: 4),
-                Text("\$$price", style: TextStyle(color: Colors.redAccent)),
+                const SizedBox(height: 4),
+                Text(
+                  "\$$price",
+                  style: const TextStyle(color: Colors.redAccent),
+                ),
               ],
             ),
           ),
@@ -459,13 +525,13 @@ class _HomeScreenState extends State<HomeScreen> {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.redAccent,
               elevation: 0,
-              padding: EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10), // rounded corners
+                borderRadius: BorderRadius.circular(10),
               ),
             ),
             onPressed: () {},
-            child: Text(
+            child: const Text(
               "Book Now",
               style: TextStyle(color: Colors.white, fontSize: 13),
             ),
