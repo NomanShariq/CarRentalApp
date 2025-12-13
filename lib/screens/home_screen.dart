@@ -12,14 +12,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int selectedindex = 0;
 
-  // --- NEW STATE & CONTROLLER FOR SCROLL INDICATOR ---
-  // Controller for the horizontal scroll view
   final ScrollController _scrollController = ScrollController();
-  int _currentPage = 0; // Tracks which "page" (set of cards) is visible
-  final double cardWidth =
-      195; // Approximate total width of one card + spacing (180 + 15)
-
-  // Sample data list for the featured cars
+  int _currentPage = 0;
+  final double cardWidth = 195;
   final List<Map<String, String>> featuredCars = [
     {
       "image": "images/Tesla.png",
@@ -61,17 +56,13 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  // 🔑 LOGIC TO UPDATE PAGE INDICATOR BASED ON SCROLL POSITION
   void _updatePageIndicator() {
-    // Get the current offset of the scroll view
     double scrollOffset = _scrollController.offset;
-    // Calculate which card is currently aligned near the start (first visible card)
     int firstVisibleIndex = (scrollOffset / cardWidth).round();
 
     // We only want 3 indicator dots, so we cap the page index.
-    int maxPages = featuredCars.length - 1;
+    // int maxPages = featuredCars.length - 1;
 
-    // Calculate the 'page' index for the indicator (e.g., first visible card is page 0, second is page 1, etc.)
     int newPage = 0;
     if (firstVisibleIndex >= 2) {
       newPage = 2;
@@ -88,9 +79,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Determine how many pages we need for the indicator.
-    // E.g., if you show 2 cards at a time, 4 items would be 2 pages.
-    // Let's assume a maximum of 3 visual scroll segments for simplicity.
     int indicatorCount = 3;
 
     return Scaffold(
@@ -293,7 +281,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 15),
 
-                    // 🔑 REVERTED: FEATURED CAR CARDS (SingleChildScrollView with ScrollController)
                     SingleChildScrollView(
                       controller: _scrollController,
                       scrollDirection: Axis.horizontal,
@@ -372,7 +359,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // --- WIDGETS ---
 
-  // 🔑 Dot Indicator Builder (Now relies on the scroll controller logic)
   Widget _buildDotIndicator(int index) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
