@@ -37,6 +37,9 @@ dependencies:
   google_fonts: ^6.3.3
   font_awesome_flutter: ^10.7.0
   image_picker: ^1.2.1
+  firebase_core: ^4.2.1
+  firebase_auth: ^6.1.2
+  google_sign_in: ^7.2.0
 
 dev_dependencies:
   flutter_test:

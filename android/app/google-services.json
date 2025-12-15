@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "431276552444",
+    "project_id": "rentalx-8d850",
+    "storage_bucket": "rentalx-8d850.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:431276552444:android:aeb3c39d2f5d3dccb82779",
+        "android_client_info": {
+          "package_name": "com.example.Rentalx"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "431276552444-m17963eemb07cqghpkra2tbpikof6v60.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAqN1EHy3GosgqFzanO7durneP5LSqkiDY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "431276552444-m17963eemb07cqghpkra2tbpikof6v60.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

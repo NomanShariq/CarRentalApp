@@ -1,3 +1,5 @@
+import 'package:car_rental_app/screens/home_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -17,6 +19,67 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   bool _isPasswordVisible = false;
+  final _auth = FirebaseAuth.instance;
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  String? _errorMessage;
+
+  Future<void> _signIn() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    // 1. Primary Validation
+    if (email.isEmpty || password.isEmpty) {
+      setState(() => _errorMessage = 'Please enter both email and password.');
+      return;
+    }
+
+    setState(() => _errorMessage = null); // Clear previous errors
+
+    try {
+      // 2. Attempt to Sign In
+      final userCredential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      final user = userCredential.user;
+
+      if (user != null && user.displayName == null) {
+        final defaultName = email.split('@')[0];
+
+        await user.updateDisplayName(defaultName);
+
+        await user.reload();
+        print('User name updated successfully to: $defaultName');
+      }
+
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+          (Route<dynamic> route) => false, // Clears all previous routes
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      // 5. Handle specific Firebase errors
+      setState(() {
+        if (e.code == 'user-not-found') {
+          _errorMessage = 'No user found for that email.';
+        } else if (e.code == 'wrong-password') {
+          _errorMessage = 'Wrong password provided.';
+        } else if (e.code == 'invalid-email') {
+          _errorMessage = 'The email address is invalid.';
+        } else {
+          _errorMessage = e.message;
+        }
+      });
+      print("Login failed with Firebase exception: ${e.code}");
+    } catch (e) {
+      setState(() => _errorMessage = 'An unexpected error occurred.');
+      print("Login failed with general error: $e");
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -97,11 +160,13 @@ class _LoginScreenState extends State<LoginScreen> {
     return Column(
       children: [
         TextFormField(
+          controller: _emailController,
           style: const TextStyle(color: tLightTextColor),
           decoration: _buildInputDecoration('Email Address', Icons.email),
         ),
         const SizedBox(height: 20),
         TextFormField(
+          controller: _passwordController,
           obscureText: !_isPasswordVisible,
           style: const TextStyle(color: tLightTextColor),
           decoration: _buildInputDecoration('Password', Icons.lock).copyWith(
@@ -118,11 +183,37 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
         const SizedBox(height: 10),
+        if (_errorMessage != null)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10.0),
+            child: Text(
+              _errorMessage!,
+              style: const TextStyle(
+                color: tPrimaryColor,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
 
         Align(
           alignment: Alignment.centerRight,
           child: TextButton(
-            onPressed: () {},
+            onPressed: () async {
+              try {
+                await FirebaseAuth.instance.sendPasswordResetEmail(
+                  email: _emailController.text.trim(),
+                );
+                // Show a confirmation to the user
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Password reset link sent to email!'),
+                  ),
+                );
+              } catch (e) {
+                // Handle case where email doesn't exist
+                print(e);
+              }
+            },
             child: const Text(
               'Forgot Password?',
               style: TextStyle(color: tPrimaryColor),
@@ -136,9 +227,7 @@ class _LoginScreenState extends State<LoginScreen> {
           width: double.infinity,
           height: 48,
           child: ElevatedButton(
-            onPressed: () {
-              Navigator.pushNamed(context, '/home');
-            },
+            onPressed: _signIn,
             style: ElevatedButton.styleFrom(
               backgroundColor: tPrimaryColor,
               shape: RoundedRectangleBorder(

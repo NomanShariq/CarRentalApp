@@ -1,8 +1,7 @@
-import 'package:car_rental_app/screens/home_screen.dart';
-import 'package:car_rental_app/screens/login_screen.dart';
+import 'package:car_rental_app/screens/login_screen.dart'; // Ensure this path is correct
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-// --- Theme Constants ---
 const Color tPrimaryColor = Color.fromARGB(255, 0, 0, 0);
 const Color tLightBackground = Colors.white;
 const Color tDarkTextColor = Color(0xFF1E1E2C);
@@ -17,14 +16,22 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  // Editable fields
-  String _userName = 'Syed Noman Shariq';
-  String _userEmail = 'Nom87@gmail.com';
-  String _userPhone = '+92 313 1234567';
+  final User? _user = FirebaseAuth.instance.currentUser;
+
+  late String _userName;
+  late String _userEmail;
+  String _userPhone = 'Not Set';
 
   final String _staticProfileImage = "images/Profile.jpg";
 
-  // Edit dialog
+  @override
+  void initState() {
+    super.initState();
+    _userName = _user?.displayName ?? 'Not Set';
+    _userEmail = _user?.email ?? 'N/A';
+    _userPhone = _user?.phoneNumber ?? 'Not Set';
+  }
+
   void _editField(String label, String currentValue, Function(String) onSave) {
     TextEditingController controller = TextEditingController(
       text: currentValue,
@@ -42,10 +49,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           content: TextField(
             controller: controller,
             style: TextStyle(color: const Color.fromARGB(221, 24, 23, 23)),
-
             decoration: const InputDecoration(
               hintText: "Enter new value",
-
               focusedBorder: UnderlineInputBorder(
                 borderSide: BorderSide(color: tPrimaryColor),
               ),
@@ -72,8 +77,85 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Future<void> _saveChanges() async {
+    if (_user == null) return;
+
+    try {
+      bool nameUpdated = false;
+      bool emailChangeInitiated = false;
+
+      // 1. Update Display Name
+      if (_user?.displayName != _userName) {
+        await _user!.updateDisplayName(_userName);
+        nameUpdated = true;
+      }
+
+      // 2. Initiate Email Change
+      if (_user?.email != _userEmail) {
+        await _updateEmail(); // Calls the helper function to send verification email
+        emailChangeInitiated = true;
+      }
+
+      // 3. Phone Number update (Placeholder logic)
+      // Note: Full phone number update requires PhoneAuth flow which is complex.
+      if (_user?.phoneNumber != _userPhone && _userPhone != 'Not Set') {
+        // Here you would typically call phone update logic (which we are skipping for simplicity)
+      }
+
+      // 4. Reload user to sync local state immediately
+      await _user!.reload();
+
+      // 5. Provide feedback and navigate
+      if (mounted) {
+        String successMessage = "Profile saved successfully!";
+
+        if (emailChangeInitiated) {
+          successMessage =
+              "Check your inbox! An email verification link has been sent to $_userEmail.";
+        } else if (nameUpdated) {
+          successMessage = "Name updated successfully!";
+        }
+
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(successMessage)));
+
+        // Navigate back only if no email update was initiated (to keep the user focused on the verification step)
+        if (!emailChangeInitiated) {
+          Navigator.of(context).pop();
+        }
+      }
+    } on FirebaseAuthException catch (e) {
+      String message = "Failed to update profile: ${e.message}";
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
+      }
+      print("Firebase update error: ${e.code}");
+    }
+  }
+
+  void _performLogout(BuildContext context) async {
+    await FirebaseAuth.instance.signOut();
+
+    if (context.mounted) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+        (Route<dynamic> route) => false,
+      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Logged out successfully!")));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_user == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     return Scaffold(
       backgroundColor: tLightBackground,
       appBar: AppBar(
@@ -93,7 +175,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _buildProfileHeader(),
             const SizedBox(height: 40),
 
-            // Editable fields
             _buildEditableInfoField(
               Icons.person_outline,
               "Full Name",
@@ -119,17 +200,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               text: "Save Changes",
               icon: Icons.save_outlined,
               color: tPrimaryColor,
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const HomeScreen()),
-                );
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Profile updated successfully!"),
-                  ),
-                );
-              },
+              onPressed: _saveChanges,
             ),
 
             const SizedBox(height: 15),
@@ -144,6 +215,50 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _updateEmail() async {
+    if (_user == null || _userEmail == _user?.email) {
+      return;
+    }
+
+    try {
+      // Calls Firebase to send a verification link to the new email address.
+      // The email property of the user is NOT updated until the user clicks the link.
+      await _user!.verifyBeforeUpdateEmail(_userEmail);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Verification link sent to the new email ($_userEmail). Please check your inbox and click the link to confirm the change.',
+            ),
+            duration: const Duration(seconds: 8),
+          ),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      String message = "Failed to update email. ";
+      if (e.code == 'requires-recent-login') {
+        message =
+            "Email change failed: Please log in again recently and try immediately after.";
+      } else if (e.code == 'invalid-email') {
+        message = "The new email address format is invalid.";
+      } else if (e.code == 'email-already-in-use') {
+        message = "This email is already in use by another account.";
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
+        // Revert the local state if the update failed
+        setState(() {
+          _userEmail = _user?.email ?? 'N/A';
+        });
+      }
+      print("Firebase Email Update Error: ${e.code}");
+    }
   }
 
   Widget _buildProfileHeader() {
@@ -261,13 +376,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.red[600]),
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginScreen()),
-                );
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Logged out successfully!")),
-                );
+                Navigator.pop(context);
+                _performLogout(context);
               },
               child: const Text(
                 "Logout",
