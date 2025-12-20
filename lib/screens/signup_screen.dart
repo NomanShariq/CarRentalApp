@@ -1,7 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-// --- Reusing the established compact dark theme constants ---
 const Color tPrimaryColor = Color.fromARGB(255, 187, 56, 56);
 const Color tDarkColor = Color(0xFF1E1E2C);
 const Color tLightTextColor = Colors.white;
@@ -28,7 +27,6 @@ class _SignUpScreenState extends State<SignupScreen> {
     final password = _passwordController.text.trim();
     final confirmPassword = _confirmPasswordController.text.trim();
 
-    // Basic validation check
     if (_emailController.text.isEmpty ||
         password.isEmpty ||
         confirmPassword.isEmpty) {
@@ -36,7 +34,6 @@ class _SignUpScreenState extends State<SignupScreen> {
       return;
     }
 
-    // NEW: Check if passwords match
     if (password != confirmPassword) {
       setState(() => _errorMessage = 'Passwords do not match.');
       return;
@@ -51,7 +48,6 @@ class _SignUpScreenState extends State<SignupScreen> {
       );
 
       Navigator.pushReplacementNamed(context, '/login');
-      // Success!
     } on FirebaseAuthException catch (e) {
       setState(() {
         if (e.code == 'weak-password') {
@@ -146,14 +142,12 @@ class _SignUpScreenState extends State<SignupScreen> {
   Widget _buildSignUpForm() {
     return Column(
       children: [
-        // Full Name Field
         TextFormField(
           style: const TextStyle(color: tLightTextColor),
           decoration: _buildInputDecoration('Full Name', Icons.person),
         ),
         const SizedBox(height: 15),
 
-        // Email Field
         TextFormField(
           controller: _emailController,
           keyboardType: TextInputType.emailAddress,
@@ -162,7 +156,6 @@ class _SignUpScreenState extends State<SignupScreen> {
         ),
         const SizedBox(height: 15),
 
-        // Password Field
         TextFormField(
           controller: _passwordController,
           obscureText: !_isPasswordVisible,
@@ -180,14 +173,13 @@ class _SignUpScreenState extends State<SignupScreen> {
             child: Text(
               _errorMessage!,
               style: const TextStyle(
-                color: tPrimaryColor, // Use your primary color for visibility
+                color: tPrimaryColor,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
         const SizedBox(height: 15),
 
-        // Confirm Password Field
         TextFormField(
           controller: _confirmPasswordController,
           obscureText: !_isConfirmPasswordVisible,
@@ -207,31 +199,11 @@ class _SignUpScreenState extends State<SignupScreen> {
         ),
         const SizedBox(height: 30),
 
-        // Sign Up Button
-        // SizedBox(
-        //   width: double.infinity,
-        //   height: 48, // Compact height
-        //   child: ElevatedButton(
-        //     onPressed: () {
-        //       Navigator.pushNamed(context, '/home');
-        //     },
-        //     style: ElevatedButton.styleFrom(
-        //       backgroundColor: tPrimaryColor,
-        //       shape: RoundedRectangleBorder(
-        //         borderRadius: BorderRadius.circular(10),
-        //       ),
-        //     ),
-        //     child: const Text(
-        //       'SIGN UP',
-        //       style: TextStyle(fontSize: 16, color: tLightTextColor),
-        //     ),
-        //   ),
-        // ),
         SizedBox(
           width: double.infinity,
           height: 48,
           child: ElevatedButton(
-            onPressed: _signUp, // <--- CALL YOUR ASYNC SIGNUP FUNCTION
+            onPressed: _signUp,
             style: ElevatedButton.styleFrom(
               backgroundColor: tPrimaryColor,
               shape: RoundedRectangleBorder(

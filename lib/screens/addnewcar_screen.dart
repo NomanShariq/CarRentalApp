@@ -89,14 +89,12 @@ class _AddNewCarScreenState extends State<AddNewCarScreen> {
               ),
               const SizedBox(height: 20),
 
-              // 1. CAR NAME INPUT
               _buildTextField(
                 controller: _nameController,
                 label: "Car Name",
                 icon: Icons.directions_car,
               ),
 
-              // 2. PRICE INPUT
               _buildTextField(
                 controller: _priceController,
                 label: "Price per Day/Sale Amount",
@@ -104,7 +102,6 @@ class _AddNewCarScreenState extends State<AddNewCarScreen> {
                 keyboardType: TextInputType.number,
               ),
 
-              // 3. RATING INPUT
               _buildTextField(
                 controller: _ratingController,
                 label: "Rating (1.0 to 5.0)",
@@ -123,7 +120,6 @@ class _AddNewCarScreenState extends State<AddNewCarScreen> {
 
               const SizedBox(height: 30),
 
-              // 4. RENT OR SALE DROPDOWN
               Text(
                 "Availability Type",
                 style: GoogleFonts.poppins(
@@ -173,14 +169,8 @@ class _AddNewCarScreenState extends State<AddNewCarScreen> {
         borderRadius: BorderRadius.circular(10),
       ),
       child: DropdownButtonHideUnderline(
-        // 🔑 THE FIX IS HERE: Wrap the DropdownButton in a Theme widget
         child: Theme(
-          // Copy the main app's theme data, but override canvasColor
-          data: Theme.of(context).copyWith(
-            canvasColor:
-                Colors.white, // Forces the dropdown menu background to white
-            // You can also use dropdownColor: Colors.white,
-          ),
+          data: Theme.of(context).copyWith(canvasColor: Colors.white),
           child: DropdownButton<String>(
             value: _carAvailability,
             isExpanded: true,

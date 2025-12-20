@@ -2,8 +2,8 @@ import 'package:car_rental_app/screens/home_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
-// Reuse constants
 const Color tPrimaryColor = Color.fromARGB(255, 187, 56, 56);
 const Color tDarkColor = Color(0xFF1E1E2C);
 const Color tLightTextColor = Colors.white;
@@ -28,16 +28,14 @@ class _LoginScreenState extends State<LoginScreen> {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
 
-    // 1. Primary Validation
     if (email.isEmpty || password.isEmpty) {
       setState(() => _errorMessage = 'Please enter both email and password.');
       return;
     }
 
-    setState(() => _errorMessage = null); // Clear previous errors
+    setState(() => _errorMessage = null);
 
     try {
-      // 2. Attempt to Sign In
       final userCredential = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
@@ -57,11 +55,10 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const HomeScreen()),
-          (Route<dynamic> route) => false, // Clears all previous routes
+          (Route<dynamic> route) => false,
         );
       }
     } on FirebaseAuthException catch (e) {
-      // 5. Handle specific Firebase errors
       setState(() {
         if (e.code == 'user-not-found') {
           _errorMessage = 'No user found for that email.';
@@ -77,6 +74,35 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       setState(() => _errorMessage = 'An unexpected error occurred.');
       print("Login failed with general error: $e");
+    }
+  }
+
+  Future<void> _signInWithGoogle() async {
+    try {
+      final GoogleSignIn googleSignIn = GoogleSignIn();
+      final GoogleSignInAccount? googleUser = await googleSignIn.signIn();
+
+      if (googleUser == null) return;
+
+      final GoogleSignInAuthentication googleAuth =
+          await googleUser.authentication;
+
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      await _auth.signInWithCredential(credential);
+
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+          (Route<dynamic> route) => false,
+        );
+      }
+    } catch (e) {
+      setState(() => _errorMessage = 'Google Sign-In failed.');
+      print("Error details: $e");
     }
   }
 
@@ -127,7 +153,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 _buildSocialLoginButtons(),
                 const SizedBox(height: 30),
 
-                // --- Sign Up Link ---
                 TextButton(
                   onPressed: () {
                     Navigator.pushNamed(context, '/signUp');
@@ -203,14 +228,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 await FirebaseAuth.instance.sendPasswordResetEmail(
                   email: _emailController.text.trim(),
                 );
-                // Show a confirmation to the user
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Password reset link sent to email!'),
                   ),
                 );
               } catch (e) {
-                // Handle case where email doesn't exist
                 print(e);
               }
             },
@@ -222,7 +245,6 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         const SizedBox(height: 20),
 
-        // Login Button
         SizedBox(
           width: double.infinity,
           height: 48,
@@ -276,7 +298,11 @@ class _LoginScreenState extends State<LoginScreen> {
           () {},
         ),
         const SizedBox(width: 20),
-        _buildSocialButton(FontAwesomeIcons.google, Colors.white, () {}),
+        _buildSocialButton(
+          FontAwesomeIcons.google,
+          Colors.white,
+          _signInWithGoogle,
+        ),
         const SizedBox(width: 20),
 
         _buildSocialButton(FontAwesomeIcons.instagram, Colors.purple, () {}),

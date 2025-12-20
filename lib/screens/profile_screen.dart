@@ -1,4 +1,4 @@
-import 'package:car_rental_app/screens/login_screen.dart'; // Ensure this path is correct
+import 'package:car_rental_app/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -84,28 +84,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
       bool nameUpdated = false;
       bool emailChangeInitiated = false;
 
-      // 1. Update Display Name
       if (_user?.displayName != _userName) {
         await _user!.updateDisplayName(_userName);
         nameUpdated = true;
       }
 
-      // 2. Initiate Email Change
       if (_user?.email != _userEmail) {
-        await _updateEmail(); // Calls the helper function to send verification email
+        await _updateEmail();
         emailChangeInitiated = true;
       }
 
-      // 3. Phone Number update (Placeholder logic)
-      // Note: Full phone number update requires PhoneAuth flow which is complex.
-      if (_user?.phoneNumber != _userPhone && _userPhone != 'Not Set') {
-        // Here you would typically call phone update logic (which we are skipping for simplicity)
-      }
+      if (_user?.phoneNumber != _userPhone && _userPhone != 'Not Set') {}
 
-      // 4. Reload user to sync local state immediately
       await _user!.reload();
 
-      // 5. Provide feedback and navigate
       if (mounted) {
         String successMessage = "Profile saved successfully!";
 
@@ -120,7 +112,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           context,
         ).showSnackBar(SnackBar(content: Text(successMessage)));
 
-        // Navigate back only if no email update was initiated (to keep the user focused on the verification step)
         if (!emailChangeInitiated) {
           Navigator.of(context).pop();
         }
@@ -223,8 +214,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     try {
-      // Calls Firebase to send a verification link to the new email address.
-      // The email property of the user is NOT updated until the user clicks the link.
       await _user!.verifyBeforeUpdateEmail(_userEmail);
 
       if (mounted) {
@@ -252,7 +241,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text(message)));
-        // Revert the local state if the update failed
         setState(() {
           _userEmail = _user?.email ?? 'N/A';
         });

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-// --- Constants (Adjust as needed) ---
 const Color tDarkBackground = Color(0xFF161616);
 const Color tPrimaryBlue = Color.fromARGB(255, 209, 37, 37);
 const Color tLightColor = Colors.white;
