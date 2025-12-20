@@ -17,7 +17,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int navIndex = 0;
   int categoryIndex = 0;
   String selectedCategory = "All";
-
+  bool isDarkMode = false;
   final ScrollController _scrollController = ScrollController();
   int _currentPage = 0;
   final double cardWidth = 195;
@@ -75,6 +75,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         _buildDynamicCategories(),
 
                         const SizedBox(height: 30),
+                        _sectionTitle(
+                          selectedCategory == "All"
+                              ? "All Collections"
+                              : "$selectedCategory Collections",
+                        ),
+                        const SizedBox(height: 15),
+                        _buildCategorySpecificHorizontal(),
+
+                        const SizedBox(height: 30),
                         _sectionTitle("Featured Cars"),
                         const SizedBox(height: 15),
                         _buildFeaturedCarsFirestore(),
@@ -94,6 +103,39 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildCategorySpecificHorizontal() {
+    Query query = FirebaseFirestore.instance.collection('cars');
+
+    if (selectedCategory != "All") {
+      query = query.where('category', isEqualTo: selectedCategory);
+    }
+
+    return StreamBuilder<QuerySnapshot>(
+      stream: query.snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData)
+          return const Center(child: CircularProgressIndicator());
+
+        var docs = snapshot.data!.docs;
+
+        if (docs.isEmpty) {
+          return const Text("No cars found.");
+        }
+
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: docs
+                .map(
+                  (doc) => _featuredCarCard(doc.data() as Map<String, dynamic>),
+                )
+                .toList(),
           ),
         );
       },
@@ -276,6 +318,8 @@ class _HomeScreenState extends State<HomeScreen> {
               Text(
                 car['name'] ?? 'Car',
                 style: const TextStyle(fontWeight: FontWeight.bold),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
               Row(
                 children: [
@@ -301,27 +345,12 @@ class _HomeScreenState extends State<HomeScreen> {
     Query query = FirebaseFirestore.instance
         .collection('cars')
         .where('isFeatured', isEqualTo: false);
-
-    if (selectedCategory != "All") {
-      query = query.where('category', isEqualTo: selectedCategory);
-    }
-
     return StreamBuilder<QuerySnapshot>(
       stream: query.snapshots(),
       builder: (context, snapshot) {
         if (!snapshot.hasData)
           return const Center(child: CircularProgressIndicator());
         var cars = snapshot.data!.docs;
-
-        if (cars.isEmpty) {
-          return const Center(
-            child: Padding(
-              padding: EdgeInsets.all(20.0),
-              child: Text("No cars available in this category"),
-            ),
-          );
-        }
-
         return Column(
           children: cars
               .map(
@@ -372,6 +401,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   Text(
                     "\$${car['price'] ?? 0}/day",

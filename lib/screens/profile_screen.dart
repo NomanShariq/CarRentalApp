@@ -84,19 +84,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
       bool nameUpdated = false;
       bool emailChangeInitiated = false;
 
-      if (_user?.displayName != _userName) {
-        await _user!.updateDisplayName(_userName);
+      if (_user.displayName != _userName) {
+        await _user.updateDisplayName(_userName);
         nameUpdated = true;
       }
 
-      if (_user?.email != _userEmail) {
+      if (_user.email != _userEmail) {
         await _updateEmail();
         emailChangeInitiated = true;
       }
 
-      if (_user?.phoneNumber != _userPhone && _userPhone != 'Not Set') {}
+      if (_user.phoneNumber != _userPhone && _userPhone != 'Not Set') {}
 
-      await _user!.reload();
+      await _user.reload();
 
       if (mounted) {
         String successMessage = "Profile saved successfully!";
@@ -209,12 +209,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _updateEmail() async {
-    if (_user == null || _userEmail == _user?.email) {
+    if (_user == null || _userEmail == _user.email) {
       return;
     }
 
     try {
-      await _user!.verifyBeforeUpdateEmail(_userEmail);
+      await _user.verifyBeforeUpdateEmail(_userEmail);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -242,7 +242,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           context,
         ).showSnackBar(SnackBar(content: Text(message)));
         setState(() {
-          _userEmail = _user?.email ?? 'N/A';
+          _userEmail = _user.email ?? 'N/A';
         });
       }
       print("Firebase Email Update Error: ${e.code}");
