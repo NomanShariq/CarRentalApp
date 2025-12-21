@@ -51,3 +51,16 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
+class Car {
+  final String name, image, rating, price;
+  Car({
+    required this.name,
+    required this.image,
+    required this.rating,
+    required this.price,
+  });
+}
+
+// Ye list poori app mein favorites save rakhegi
+List<Car> favoriteCars = [];

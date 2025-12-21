@@ -59,51 +59,53 @@ class _HomeScreenState extends State<HomeScreen> {
           appBar: _buildAppBar(context),
           floatingActionButton: _buildFAB(context),
           bottomNavigationBar: _buildBottomNav(),
-          body: SafeArea(
-            child: Column(
-              children: [
-                _buildGradientHeader(displayName),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 30),
-                        _sectionTitle("Categories"),
-                        const SizedBox(height: 15),
-                        _buildDynamicCategories(),
+          body: navIndex == 2
+              ? _buildFavoritesScreen() // Naya widget jo hum banayenge
+              : SafeArea(
+                  child: Column(
+                    children: [
+                      _buildGradientHeader(displayName),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 30),
+                              _sectionTitle("Categories"),
+                              const SizedBox(height: 15),
+                              _buildDynamicCategories(),
 
-                        const SizedBox(height: 30),
-                        _sectionTitle(
-                          selectedCategory == "All"
-                              ? "All Collections"
-                              : "$selectedCategory Collections",
+                              const SizedBox(height: 30),
+                              _sectionTitle(
+                                selectedCategory == "All"
+                                    ? "All Collections"
+                                    : "$selectedCategory Collections",
+                              ),
+                              const SizedBox(height: 15),
+                              _buildCategorySpecificHorizontal(),
+
+                              const SizedBox(height: 30),
+                              _sectionTitle("Featured Cars"),
+                              const SizedBox(height: 15),
+                              _buildFeaturedCarsFirestore(),
+
+                              const SizedBox(height: 10),
+                              _buildDotIndicatorRow(),
+
+                              const SizedBox(height: 30),
+                              _sectionTitle("Popular Deals"),
+                              const SizedBox(height: 20),
+                              _buildPopularDealsFirestore(),
+
+                              const SizedBox(height: 30),
+                            ],
+                          ),
                         ),
-                        const SizedBox(height: 15),
-                        _buildCategorySpecificHorizontal(),
-
-                        const SizedBox(height: 30),
-                        _sectionTitle("Featured Cars"),
-                        const SizedBox(height: 15),
-                        _buildFeaturedCarsFirestore(),
-
-                        const SizedBox(height: 10),
-                        _buildDotIndicatorRow(),
-
-                        const SizedBox(height: 30),
-                        _sectionTitle("Popular Deals"),
-                        const SizedBox(height: 20),
-                        _buildPopularDealsFirestore(),
-
-                        const SizedBox(height: 30),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
-          ),
         );
       },
     );
@@ -119,8 +121,9 @@ class _HomeScreenState extends State<HomeScreen> {
     return StreamBuilder<QuerySnapshot>(
       stream: query.snapshots(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData)
+        if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
+        }
 
         var docs = snapshot.data!.docs;
 
@@ -269,8 +272,9 @@ class _HomeScreenState extends State<HomeScreen> {
           .where('isFeatured', isEqualTo: true)
           .snapshots(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData)
+        if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
+        }
         var docs = snapshot.data!.docs;
         return SingleChildScrollView(
           controller: _scrollController,
@@ -348,8 +352,9 @@ class _HomeScreenState extends State<HomeScreen> {
     return StreamBuilder<QuerySnapshot>(
       stream: query.snapshots(),
       builder: (context, snapshot) {
-        if (!snapshot.hasData)
+        if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
+        }
         var cars = snapshot.data!.docs;
         return Column(
           children: cars
@@ -362,7 +367,59 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _popularDealCard(Map<String, dynamic> car) {
+  Widget _buildFavoritesScreen() {
+    final user = FirebaseAuth.instance.currentUser;
+    return Scaffold(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: Center(
+          child: Text(
+            "My Favorites ❤️",
+            style: GoogleFonts.poppins(
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('favorites')
+            .where('userId', isEqualTo: user?.uid)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+            return Center(
+              child: Text(
+                "No favorites yet!",
+                style: GoogleFonts.poppins(color: Colors.grey),
+              ),
+            );
+          }
+          var favDocs = snapshot.data!.docs;
+          return ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            itemCount: favDocs.length,
+            itemBuilder: (context, index) {
+              var car = favDocs[index].data() as Map<String, dynamic>;
+              // Yahan true bhejne se Delete button nazar ayega
+              return _popularDealCard(car, isFavoriteScreen: true);
+            },
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _popularDealCard(
+    Map<String, dynamic> car, {
+    bool isFavoriteScreen = false,
+  }) {
     return GestureDetector(
       onTap: () => Navigator.push(
         context,
@@ -411,7 +468,36 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+
+            // AGAR FAVORITE SCREEN HAI TOH DELETE ICON DIKHAO
+            isFavoriteScreen
+                ? IconButton(
+                    icon: const Icon(Icons.delete_outline, color: Colors.red),
+                    onPressed: () async {
+                      final user = FirebaseAuth.instance.currentUser;
+                      if (user == null) return;
+
+                      // Firestore se delete karne ka logic
+                      var snapshot = await FirebaseFirestore.instance
+                          .collection('favorites')
+                          .where('userId', isEqualTo: user.uid)
+                          .where('name', isEqualTo: car['name'])
+                          .get();
+
+                      for (var doc in snapshot.docs) {
+                        await doc.reference.delete();
+                      }
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Removed from Favorites")),
+                      );
+                    },
+                  )
+                : const Icon(
+                    Icons.arrow_forward_ios,
+                    size: 16,
+                    color: Colors.grey,
+                  ),
           ],
         ),
       ),
