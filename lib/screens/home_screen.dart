@@ -1,4 +1,5 @@
 import 'package:car_rental_app/screens/addnewcar_screen.dart';
+import 'package:car_rental_app/screens/allcars_screen.dart';
 import 'package:car_rental_app/screens/cardetail_screen.dart';
 import 'package:car_rental_app/screens/profile_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -17,10 +18,12 @@ class _HomeScreenState extends State<HomeScreen> {
   int navIndex = 0;
   int categoryIndex = 0;
   String selectedCategory = "All";
-  bool isDarkMode = false;
   final ScrollController _scrollController = ScrollController();
   int _currentPage = 0;
   final double cardWidth = 195;
+  String sortBy = "None";
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = "";
 
   @override
   void initState() {
@@ -32,6 +35,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _scrollController.removeListener(_updatePageIndicator);
     _scrollController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -43,6 +47,26 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_currentPage != newPage) {
       setState(() => _currentPage = newPage);
     }
+  }
+
+  void _navigateToViewAll(
+    BuildContext context,
+    String title, {
+    String? category,
+    bool onlyFeatured = false,
+    bool onlyPopular = false,
+  }) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (c) => AllCarsScreen(
+          title: title,
+          category: category,
+          onlyFeatured: onlyFeatured,
+          onlyPopular: onlyPopular,
+        ),
+      ),
+    );
   }
 
   @override
@@ -72,6 +96,12 @@ class _HomeScreenState extends State<HomeScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const SizedBox(height: 30),
+                              if (_searchQuery.isNotEmpty) ...[
+                                _sectionTitle("Matching Results 🔍"),
+                                const SizedBox(height: 15),
+                                _buildSearchSection(), // Ye naya function hai
+                                const SizedBox(height: 30),
+                              ],
                               _sectionTitle("Categories"),
                               const SizedBox(height: 15),
                               _buildDynamicCategories(),
@@ -81,12 +111,24 @@ class _HomeScreenState extends State<HomeScreen> {
                                 selectedCategory == "All"
                                     ? "All Collections"
                                     : "$selectedCategory Collections",
+                                onViewAll: () => _navigateToViewAll(
+                                  context,
+                                  "Collections",
+                                  category: selectedCategory,
+                                ),
                               ),
                               const SizedBox(height: 15),
                               _buildCategorySpecificHorizontal(),
 
                               const SizedBox(height: 30),
-                              _sectionTitle("Featured Cars"),
+                              _sectionTitle(
+                                "Featured Cars",
+                                onViewAll: () => _navigateToViewAll(
+                                  context,
+                                  "Featured Cars",
+                                  onlyFeatured: true,
+                                ),
+                              ),
                               const SizedBox(height: 15),
                               _buildFeaturedCarsFirestore(),
 
@@ -94,7 +136,14 @@ class _HomeScreenState extends State<HomeScreen> {
                               _buildDotIndicatorRow(),
 
                               const SizedBox(height: 30),
-                              _sectionTitle("Popular Deals"),
+                              _sectionTitle(
+                                "Popular Deals",
+                                onViewAll: () => _navigateToViewAll(
+                                  context,
+                                  "Popular Deals",
+                                  onlyPopular: true,
+                                ),
+                              ),
                               const SizedBox(height: 20),
                               _buildPopularDealsFirestore(),
 
@@ -145,10 +194,31 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _sectionTitle(String title) {
-    return Text(
-      title,
-      style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.w600),
+  Widget _sectionTitle(String title, {VoidCallback? onViewAll}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: GoogleFonts.poppins(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: Colors.black,
+          ),
+        ),
+        if (onViewAll != null)
+          TextButton(
+            onPressed: onViewAll,
+            child: const Text(
+              "View All",
+              style: TextStyle(
+                color: Colors.redAccent,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -194,17 +264,31 @@ class _HomeScreenState extends State<HomeScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
       ),
-      child: const Row(
+      child: Row(
         children: [
-          Icon(Icons.search, color: Colors.grey),
+          const Icon(Icons.search, color: Colors.grey),
           Expanded(
             child: TextField(
-              decoration: InputDecoration(
+              controller: _searchController,
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value.toLowerCase();
+                });
+              },
+              decoration: const InputDecoration(
                 hintText: "Search cars...",
                 border: InputBorder.none,
               ),
             ),
           ),
+          if (_searchQuery.isNotEmpty)
+            GestureDetector(
+              onTap: () {
+                _searchController.clear();
+                setState(() => _searchQuery = "");
+              },
+              child: const Icon(Icons.clear, color: Colors.grey),
+            ),
         ],
       ),
     );
@@ -469,7 +553,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
 
-            // AGAR FAVORITE SCREEN HAI TOH DELETE ICON DIKHAO
             isFavoriteScreen
                 ? IconButton(
                     icon: const Icon(Icons.delete_outline, color: Colors.red),
@@ -477,7 +560,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       final user = FirebaseAuth.instance.currentUser;
                       if (user == null) return;
 
-                      // Firestore se delete karne ka logic
                       var snapshot = await FirebaseFirestore.instance
                           .collection('favorites')
                           .where('userId', isEqualTo: user.uid)
@@ -542,6 +624,39 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildSearchSection() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance.collection('cars').snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const SizedBox();
+
+        // Filter results based on search query
+        var searchResults = snapshot.data!.docs.where((doc) {
+          String carName = (doc['name'] ?? "").toString().toLowerCase();
+          return carName.contains(_searchQuery.toLowerCase());
+        }).toList();
+
+        if (searchResults.isEmpty) {
+          return Text(
+            "No cars found for '$_searchQuery'",
+            style: const TextStyle(color: Colors.grey, fontSize: 14),
+          );
+        }
+
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: searchResults
+                .map(
+                  (doc) => _featuredCarCard(doc.data() as Map<String, dynamic>),
+                )
+                .toList(),
+          ),
+        );
+      },
     );
   }
 
