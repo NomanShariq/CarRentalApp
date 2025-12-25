@@ -14,12 +14,13 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        isCoreLibraryDesugaringEnabled = true
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
+        jvmTarget = "1.8"
     }
 
     defaultConfig {
@@ -51,7 +52,7 @@ dependencies {
     // Import the Firebase BoM (Bill of Materials) to manage SDK versions
     // Using the version you saw in the console (34.7.0)
     implementation(platform("com.google.firebase:firebase-bom:34.7.0")) 
-
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.3")
     // REQUIRED: Add the Firebase Authentication SDK
     implementation("com.google.firebase:firebase-auth")
     

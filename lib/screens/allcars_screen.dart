@@ -1,4 +1,4 @@
-import 'package:car_rental_app/widgets/car_cards.dart'; // Apna widget import karein
+import 'package:car_rental_app/widgets/car_cards.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -24,7 +24,6 @@ class AllCarsScreen extends StatefulWidget {
 class _AllCarsScreenState extends State<AllCarsScreen> {
   @override
   Widget build(BuildContext context) {
-    // 1. Query Logic
     Query query = FirebaseFirestore.instance.collection('cars');
 
     if (widget.category != null && widget.category != "All") {
@@ -38,9 +37,7 @@ class _AllCarsScreenState extends State<AllCarsScreen> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(
-        0xFFF8F9FB,
-      ), // Thoda off-white background professional lagta hai
+      backgroundColor: const Color(0xFFF8F9FB),
       appBar: AppBar(
         title: Text(
           widget.title,
@@ -69,21 +66,17 @@ class _AllCarsScreenState extends State<AllCarsScreen> {
 
           var docs = snapshot.data!.docs;
 
-          // 2. Conditional Layout Logic
-          // Agar Popular Deals hain to ListView (Tesla Style)
           if (widget.onlyPopular) {
             return ListView.builder(
               padding: const EdgeInsets.all(15),
               itemCount: docs.length,
               itemBuilder: (context, index) {
                 var car = docs[index].data() as Map<String, dynamic>;
-                // Hum wahi card use kar rahe hain jo humne pehle banaya tha
                 return CarCards.popularDealCard(context, car);
               },
             );
           }
 
-          // 3. Featured ya All Cars ke liye GridView
           return GridView.builder(
             padding: const EdgeInsets.all(15),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -103,7 +96,6 @@ class _AllCarsScreenState extends State<AllCarsScreen> {
     );
   }
 
-  // Grid Card Design for Featured/All Cars
   Widget _gridCard(BuildContext context, Map<String, dynamic> car) {
     return Container(
       padding: const EdgeInsets.all(12),

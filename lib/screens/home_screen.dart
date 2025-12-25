@@ -1,5 +1,6 @@
 import 'package:car_rental_app/screens/addnewcar_screen.dart';
 import 'package:car_rental_app/screens/allcars_screen.dart';
+import 'package:car_rental_app/screens/booking_history.dart';
 import 'package:car_rental_app/screens/cardetail_screen.dart';
 import 'package:car_rental_app/screens/profile_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -84,7 +85,7 @@ class _HomeScreenState extends State<HomeScreen> {
           floatingActionButton: _buildFAB(context),
           bottomNavigationBar: _buildBottomNav(),
           body: navIndex == 2
-              ? _buildFavoritesScreen() // Naya widget jo hum banayenge
+              ? _buildFavoritesScreen()
               : SafeArea(
                   child: Column(
                     children: [
@@ -99,7 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               if (_searchQuery.isNotEmpty) ...[
                                 _sectionTitle("Matching Results 🔍"),
                                 const SizedBox(height: 15),
-                                _buildSearchSection(), // Ye naya function hai
+                                _buildSearchSection(),
                                 const SizedBox(height: 30),
                               ],
                               _sectionTitle("Categories"),
@@ -238,19 +239,53 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            name,
-            style: GoogleFonts.poppins(
-              fontSize: 24,
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: GoogleFonts.poppins(
+                      fontSize: 24,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Text(
+                    "Find your dream car",
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                ],
+              ),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (c) => const BookingHistoryScreen(),
+                    ),
+                  );
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white24),
+                  ),
+                  child: const Icon(
+                    Icons.receipt_long_rounded,
+                    color: Colors.white,
+                    size: 26,
+                  ),
+                ),
+              ),
+            ],
           ),
-          const Text(
-            "Find your dream car",
-            style: TextStyle(color: Colors.white70),
-          ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 25),
           _buildSearchBar(),
         ],
       ),
@@ -491,7 +526,6 @@ class _HomeScreenState extends State<HomeScreen> {
             itemCount: favDocs.length,
             itemBuilder: (context, index) {
               var car = favDocs[index].data() as Map<String, dynamic>;
-              // Yahan true bhejne se Delete button nazar ayega
               return _popularDealCard(car, isFavoriteScreen: true);
             },
           );
@@ -633,7 +667,6 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context, snapshot) {
         if (!snapshot.hasData) return const SizedBox();
 
-        // Filter results based on search query
         var searchResults = snapshot.data!.docs.where((doc) {
           String carName = (doc['name'] ?? "").toString().toLowerCase();
           return carName.contains(_searchQuery.toLowerCase());
@@ -687,7 +720,7 @@ class _HomeScreenState extends State<HomeScreen> {
     backgroundColor: Colors.redAccent,
     onPressed: () => Navigator.push(
       context,
-      MaterialPageRoute(builder: (c) => AddNewCarScreen(onCarAdded: (n) {})),
+      MaterialPageRoute(builder: (context) => const AddNewCarScreen()),
     ),
     child: const Icon(Icons.add, color: Colors.white),
   );

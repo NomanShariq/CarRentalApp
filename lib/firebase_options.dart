@@ -64,7 +64,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '431276552444',
     projectId: 'rentalx-8d850',
     storageBucket: 'rentalx-8d850.firebasestorage.app',
-    iosClientId: '431276552444-or8s0njiq2i88bne7lsuf3tdj3nk0ijg.apps.googleusercontent.com',
+    iosClientId:
+        '431276552444-or8s0njiq2i88bne7lsuf3tdj3nk0ijg.apps.googleusercontent.com',
     iosBundleId: 'com.example.carRentalApp',
   );
 
@@ -74,7 +75,8 @@ class DefaultFirebaseOptions {
     messagingSenderId: '431276552444',
     projectId: 'rentalx-8d850',
     storageBucket: 'rentalx-8d850.firebasestorage.app',
-    iosClientId: '431276552444-or8s0njiq2i88bne7lsuf3tdj3nk0ijg.apps.googleusercontent.com',
+    iosClientId:
+        '431276552444-or8s0njiq2i88bne7lsuf3tdj3nk0ijg.apps.googleusercontent.com',
     iosBundleId: 'com.example.carRentalApp',
   );
 

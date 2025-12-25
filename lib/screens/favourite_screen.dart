@@ -31,9 +31,7 @@ class FavoriteScreen extends StatelessWidget {
                   subtitle: Text("\$${car.price}/day"),
                   trailing: IconButton(
                     icon: const Icon(Icons.delete, color: Colors.red),
-                    onPressed: () {
-                      // List se remove karne ka logic
-                    },
+                    onPressed: () {},
                   ),
                 );
               },

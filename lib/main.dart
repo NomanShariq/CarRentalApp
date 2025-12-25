@@ -2,6 +2,7 @@ import 'package:car_rental_app/screens/cardetail_screen.dart';
 import 'package:car_rental_app/screens/profile_screen.dart';
 import 'package:car_rental_app/screens/signup_screen.dart';
 import 'package:car_rental_app/screens/welcome_screen.dart';
+import 'package:car_rental_app/services/notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -12,6 +13,8 @@ import 'screens/home_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await NotificationService.init();
+  await Firebase.initializeApp();
   runApp(const MyApp());
 }
 
@@ -35,17 +38,12 @@ class MyApp extends StatelessWidget {
         },
       ),
       routes: {
-        // Route 1: The home screen
         '/home': (context) => const HomeScreen(),
-        // Route 2: Welcome screen
         '/profile': (context) => ProfileScreen(),
         '/welcome': (context) => const WelcomeScreen(),
-        // // Route 4: Details screen
         '/details': (context) =>
             CarDetailScreen(image: '', name: '', rating: '', price: ''),
-        // Route 5: Login screen
         '/login': (context) => LoginScreen(),
-        // Route 5: SignUp screen
         '/signUp': (context) => SignupScreen(),
       },
     );

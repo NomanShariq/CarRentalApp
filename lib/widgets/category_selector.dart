@@ -1,4 +1,3 @@
-// HomeScreen class ke bilkul bahar end mein paste karein
 import 'package:flutter/material.dart';
 
 class CategorySelector extends StatelessWidget {

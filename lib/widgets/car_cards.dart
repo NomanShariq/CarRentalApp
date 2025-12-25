@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class CarCards {
-  // 1. Optimized Image Loader
   static Widget _imageLoader(dynamic path, double h, {double? width}) {
     String imagePath = path?.toString() ?? "";
     return ClipRRect(
@@ -23,7 +22,6 @@ class CarCards {
     );
   }
 
-  // 2. FEATURED CARD (Jo error de raha tha)
   static Widget featuredCard(BuildContext context, Map<String, dynamic> car) {
     return Padding(
       padding: const EdgeInsets.only(right: 15),
@@ -64,7 +62,7 @@ class CarCards {
                   Text(" ${car['rating'] ?? 0}"),
                 ],
               ),
-              const Spacer(), // Price ko niche push karne ke liye
+              const Spacer(),
               Text(
                 "\$${car['price'] ?? 0}/day",
                 style: const TextStyle(
@@ -79,7 +77,6 @@ class CarCards {
     );
   }
 
-  // 3. Popular Deal Card (Tesla Style)
   static Widget popularDealCard(
     BuildContext context,
     Map<String, dynamic> car,
@@ -179,7 +176,6 @@ class CarCards {
     );
   }
 
-  // 4. Popular Deals Section Builder
   static Widget buildPopularDealsFirestore(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
       stream: FirebaseFirestore.instance

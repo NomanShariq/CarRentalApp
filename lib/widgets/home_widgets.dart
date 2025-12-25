@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-// 1. Reusable Section Title with View All
 class SectionTitle extends StatelessWidget {
   final String title;
   final VoidCallback? onViewAll;
@@ -39,7 +38,6 @@ class SectionTitle extends StatelessWidget {
   }
 }
 
-// 2. Optimized Image Loader
 Widget imageLoader(dynamic path, double h, {double? width}) {
   String imagePath = path?.toString() ?? "";
   return ClipRRect(

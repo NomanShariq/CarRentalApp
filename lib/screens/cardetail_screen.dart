@@ -1,3 +1,4 @@
+import 'package:car_rental_app/services/notification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -32,7 +33,6 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
     _checkIfFavorite();
   }
 
-  // --- Firebase Logic ---
   Future<void> _checkIfFavorite() async {
     if (user == null) return;
     final snapshot = await FirebaseFirestore.instance
@@ -71,13 +71,123 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
     }
   }
 
+  // Future<void> _showBookingDialog() async {
+  //   if (user == null) return;
+
+  //   DateTime? pickedDate = await showDatePicker(
+  //     context: context,
+  //     initialDate: DateTime.now(),
+  //     firstDate: DateTime.now(),
+  //     lastDate: DateTime.now().add(const Duration(days: 365)),
+  //   );
+  //   if (pickedDate == null) return;
+
+  //   TimeOfDay? pickedTime = await showTimePicker(
+  //     context: context,
+  //     initialTime: TimeOfDay.now(),
+  //   );
+  //   if (pickedTime == null) return;
+
+  //   DateTime bookingDateTime = DateTime(
+  //     pickedDate.year,
+  //     pickedDate.month,
+  //     pickedDate.day,
+  //     pickedTime.hour,
+  //     pickedTime.minute,
+  //   );
+
+  //   try {
+  //     await FirebaseFirestore.instance.collection('bookings').add({
+  //       'userId': user!.uid,
+  //       'carName': widget.name,
+  //       'price': widget.price,
+  //       'status': 'Confirmed',
+  //       'bookingDateTime': bookingDateTime,
+  //       'createdAt': FieldValue.serverTimestamp(),
+  //     });
+
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(
+  //         content: Text("Booking Confirmed for ${widget.name}!"),
+  //         backgroundColor: Colors.green,
+  //         behavior: SnackBarBehavior.floating,
+  //       ),
+  //     );
+
+  //     Future.delayed(const Duration(minutes: 1), () {
+  //       if (mounted) {
+  //         NotificationService.showInstantNotification(
+  //           "Car Rental Alert",
+  //           "Bhai, aapki ${widget.name} ready hai!",
+  //         );
+
+  //         _showReminderNotification();
+  //       }
+  //     });
+  //   } catch (e) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
+  //     );
+  //   }
+  // }
+  Future<void> _showBookingDialog() async {
+    if (user == null) return;
+
+    // 1. Instant Confirmation Snackbar (Foran dikhega)
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text("Booking Request Sent! Testing Notifications..."),
+        backgroundColor: Colors.blue,
+      ),
+    );
+
+    // 2. Sirf 3 Seconds ka wait (Testing ke liye)
+    Future.delayed(const Duration(seconds: 3), () {
+      if (mounted) {
+        // A. Mobile ki Patti (System Notification)
+        NotificationService.showInstantNotification(
+          "Car Rental Alert 🚗",
+          "Bhai, ye rahi aapki system notification!",
+        );
+
+        // B. App ke andar ka Popup (Dialog)
+        _showReminderNotification();
+      }
+    });
+  }
+
+  void _showReminderNotification() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.notifications_active, color: Colors.redAccent),
+            SizedBox(width: 10),
+            Text("Reminder!"),
+          ],
+        ),
+        content: Text(
+          "Bhai, aapki ${widget.name} ki booking ka time start hone wala hai. Tyari pakar lo!",
+          style: GoogleFonts.poppins(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("OK", style: TextStyle(color: Colors.redAccent)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FB),
       body: Stack(
         children: [
-          // Main Scrollable Body
           SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -107,9 +217,7 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
                           height: 1.6,
                         ),
                       ),
-                      const SizedBox(
-                        height: 150,
-                      ), // Extra space for bottom bars
+                      const SizedBox(height: 150),
                     ],
                   ),
                 ),
@@ -117,10 +225,8 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
             ),
           ),
 
-          // Floating Top Buttons
           _buildTopOverlay(),
 
-          // Sticky Bottom Section (Booking + Nav Bar)
           Align(
             alignment: Alignment.bottomCenter,
             child: Column(
@@ -133,7 +239,6 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
     );
   }
 
-  // 1. Full Size Image Header
   Widget _buildHeaderImage() {
     return SizedBox(
       width: double.infinity,
@@ -148,7 +253,6 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
     );
   }
 
-  // 2. Title & Rating Badge
   Widget _buildTitleSection() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -169,18 +273,18 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: const Color(0xFFFFE9EA),
+            color: Colors.white,
             borderRadius: BorderRadius.circular(15),
           ),
           child: Row(
             children: [
-              const Icon(Icons.star, color: Color(0xFFC33F4C), size: 20),
+              const Icon(Icons.star, color: Colors.amber, size: 20),
               const SizedBox(width: 5),
               Text(
                 widget.rating,
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFFC33F4C),
+                  color: Colors.black,
                 ),
               ),
             ],
@@ -190,7 +294,6 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
     );
   }
 
-  // 3. Booking Bar with Wide Button
   Widget _buildBookingBar() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
@@ -215,7 +318,7 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
                 style: const TextStyle(
                   fontSize: 25,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFFC33F4C),
+                  color: Colors.redAccent,
                 ),
               ),
             ],
@@ -223,10 +326,10 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
           const SizedBox(width: 60),
           Expanded(
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: () => _showBookingDialog(),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFC33F4C),
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                backgroundColor: Colors.redAccent,
+                padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(15),
                 ),
@@ -256,7 +359,7 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
         children: [
           Icon(
             icon,
-            color: isSelected ? const Color(0xFFC33F4C) : Colors.grey,
+            color: isSelected ? Colors.redAccent : Colors.grey,
             size: 24,
           ),
           Text(
@@ -271,7 +374,6 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
     );
   }
 
-  // UI Helpers
   Widget _buildTopOverlay() {
     return SafeArea(
       child: Padding(

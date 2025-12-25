@@ -133,7 +133,6 @@ class _AddNewCarScreenState extends State<AddNewCarScreen> {
 
               const SizedBox(height: 50),
 
-              // 5. SUBMIT BUTTON
               SizedBox(
                 width: double.infinity,
                 height: 55,
