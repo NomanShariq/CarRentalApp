@@ -25,7 +25,6 @@ class CarDetailScreen extends StatefulWidget {
 class _CarDetailScreenState extends State<CarDetailScreen> {
   bool isFavorite = false;
   final User? user = FirebaseAuth.instance.currentUser;
-  int _selectedIndex = 0;
 
   @override
   void initState() {
@@ -71,115 +70,95 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
     }
   }
 
-  // Future<void> _showBookingDialog() async {
-  //   if (user == null) return;
-
-  //   DateTime? pickedDate = await showDatePicker(
-  //     context: context,
-  //     initialDate: DateTime.now(),
-  //     firstDate: DateTime.now(),
-  //     lastDate: DateTime.now().add(const Duration(days: 365)),
-  //   );
-  //   if (pickedDate == null) return;
-
-  //   TimeOfDay? pickedTime = await showTimePicker(
-  //     context: context,
-  //     initialTime: TimeOfDay.now(),
-  //   );
-  //   if (pickedTime == null) return;
-
-  //   DateTime bookingDateTime = DateTime(
-  //     pickedDate.year,
-  //     pickedDate.month,
-  //     pickedDate.day,
-  //     pickedTime.hour,
-  //     pickedTime.minute,
-  //   );
-
-  //   try {
-  //     await FirebaseFirestore.instance.collection('bookings').add({
-  //       'userId': user!.uid,
-  //       'carName': widget.name,
-  //       'price': widget.price,
-  //       'status': 'Confirmed',
-  //       'bookingDateTime': bookingDateTime,
-  //       'createdAt': FieldValue.serverTimestamp(),
-  //     });
-
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(
-  //         content: Text("Booking Confirmed for ${widget.name}!"),
-  //         backgroundColor: Colors.green,
-  //         behavior: SnackBarBehavior.floating,
-  //       ),
-  //     );
-
-  //     Future.delayed(const Duration(minutes: 1), () {
-  //       if (mounted) {
-  //         NotificationService.showInstantNotification(
-  //           "Car Rental Alert",
-  //           "Bhai, aapki ${widget.name} ready hai!",
-  //         );
-
-  //         _showReminderNotification();
-  //       }
-  //     });
-  //   } catch (e) {
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text("Error: $e"), backgroundColor: Colors.red),
-  //     );
-  //   }
-  // }
   Future<void> _showBookingDialog() async {
     if (user == null) return;
 
-    // 1. Instant Confirmation Snackbar (Foran dikhega)
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Booking Request Sent! Testing Notifications..."),
-        backgroundColor: Colors.blue,
-      ),
-    );
-
-    // 2. Sirf 3 Seconds ka wait (Testing ke liye)
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) {
-        // A. Mobile ki Patti (System Notification)
-        NotificationService.showInstantNotification(
-          "Car Rental Alert 🚗",
-          "Bhai, ye rahi aapki system notification!",
-        );
-
-        // B. App ke andar ka Popup (Dialog)
-        _showReminderNotification();
-      }
-    });
-  }
-
-  void _showReminderNotification() {
-    showDialog(
+    // 1. DATE PICKER (Red Accent Theme)
+    DateTime? pickedDate = await showDatePicker(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
-          children: [
-            Icon(Icons.notifications_active, color: Colors.redAccent),
-            SizedBox(width: 10),
-            Text("Reminder!"),
-          ],
-        ),
-        content: Text(
-          "Bhai, aapki ${widget.name} ki booking ka time start hone wala hai. Tyari pakar lo!",
-          style: GoogleFonts.poppins(),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("OK", style: TextStyle(color: Colors.redAccent)),
+      initialDate: DateTime.now(),
+      firstDate: DateTime.now(),
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: const ColorScheme.light(
+            primary: Colors.redAccent,
+            onPrimary: Colors.white,
+            onSurface: Colors.black,
           ),
-        ],
+          textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
+          ),
+        ),
+        child: child!,
       ),
     );
+    if (pickedDate == null) return;
+
+    // 2. TIME PICKER (Red Accent Theme)
+    TimeOfDay? pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(
+          colorScheme: const ColorScheme.light(
+            primary: Colors.redAccent,
+            onPrimary: Colors.white,
+            onSurface: Colors.black,
+          ),
+          textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
+          ),
+        ),
+        child: child!,
+      ),
+    );
+    if (pickedTime == null) return;
+
+    // 3. COMBINE DATE & TIME
+    DateTime bookingDateTime = DateTime(
+      pickedDate.year,
+      pickedDate.month,
+      pickedDate.day,
+      pickedTime.hour,
+      pickedTime.minute,
+    );
+
+    // ✅ Formatting time for notification body (Fixes "N/A" issue)
+    String formattedTime = pickedTime.format(context);
+
+    try {
+      // 4. SAVE TO FIRESTORE
+      await FirebaseFirestore.instance.collection('bookings').add({
+        'userId': user!.uid,
+        'carName': widget.name,
+        'carImage': widget.image,
+        'bookingTime': bookingDateTime,
+        'price': widget.price,
+        'status': 'Confirmed',
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      // 5. SUCCESS SNACKBAR
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "Booking Successful! Notification set for $formattedTime",
+          ),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      // 6. SCHEDULE NOTIFICATION
+      await NotificationService.scheduleNotification(
+        widget.name.hashCode,
+        "Reminder: ${widget.name}",
+        "Aapka pickup time $formattedTime hai. Gari ready hai! 🚗",
+        bookingDateTime,
+      );
+    } catch (e) {
+      print("Booking Error: $e");
+    }
   }
 
   @override
@@ -190,7 +169,6 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
         children: [
           SingleChildScrollView(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildHeaderImage(),
                 Padding(
@@ -204,14 +182,10 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
                       const SizedBox(height: 15),
                       _buildSpecsGrid(),
                       const SizedBox(height: 25),
-                      _sectionLabel("Features"),
-                      const SizedBox(height: 15),
-                      _buildFeaturesList(),
-                      const SizedBox(height: 25),
                       _sectionLabel("Description"),
                       const SizedBox(height: 10),
                       Text(
-                        "Experience luxury and performance with the ${widget.name}. This stunning vehicle combines cutting-edge technology with elegant design.",
+                        "Experience the raw power and elegance of the ${widget.name}. Built for those who lead.",
                         style: GoogleFonts.poppins(
                           color: Colors.grey[600],
                           height: 1.6,
@@ -224,16 +198,8 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
               ],
             ),
           ),
-
           _buildTopOverlay(),
-
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [_buildBookingBar()],
-            ),
-          ),
+          Align(alignment: Alignment.bottomCenter, child: _buildBookingBar()),
         ],
       ),
     );
@@ -242,7 +208,7 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
   Widget _buildHeaderImage() {
     return SizedBox(
       width: double.infinity,
-      height: MediaQuery.of(context).size.height * 0.45,
+      height: MediaQuery.of(context).size.height * 0.40,
       child: ClipRRect(
         borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(30),
@@ -257,36 +223,34 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              widget.name,
-              style: GoogleFonts.poppins(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.name,
+                style: GoogleFonts.poppins(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-            ),
-            Text("Mercedes", style: GoogleFonts.poppins(color: Colors.grey)),
-          ],
+              Text(
+                "Premium Collection",
+                style: GoogleFonts.poppins(color: Colors.grey, fontSize: 14),
+              ),
+            ],
+          ),
         ),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(15),
           ),
           child: Row(
             children: [
-              const Icon(Icons.star, color: Colors.amber, size: 20),
-              const SizedBox(width: 5),
-              Text(
-                widget.rating,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-              ),
+              const Icon(Icons.star, color: Colors.amber, size: 18),
+              Text(widget.rating),
             ],
           ),
         ),
@@ -297,16 +261,14 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
   Widget _buildBookingBar() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey.shade100)),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
-        ],
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
       ),
       child: Row(
         children: [
           Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
@@ -316,32 +278,28 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
               Text(
                 "\$${widget.price}/day",
                 style: const TextStyle(
-                  fontSize: 25,
+                  fontSize: 22,
                   fontWeight: FontWeight.bold,
                   color: Colors.redAccent,
                 ),
               ),
             ],
           ),
-          const SizedBox(width: 60),
-          Expanded(
-            child: ElevatedButton(
-              onPressed: () => _showBookingDialog(),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                elevation: 0,
+          const Spacer(),
+          ElevatedButton(
+            onPressed: _showBookingDialog,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              padding: const EdgeInsets.symmetric(horizontal: 35, vertical: 15),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
               ),
-              child: const Text(
-                "Book Now",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
+            ),
+            child: const Text(
+              "Book Now",
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
@@ -350,127 +308,72 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
     );
   }
 
-  Widget _navItem(IconData icon, String label, int index) {
-    bool isSelected = _selectedIndex == index;
-    return GestureDetector(
-      onTap: () => setState(() => _selectedIndex = index),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+  Widget _buildTopOverlay() => SafeArea(
+    child: Padding(
+      padding: const EdgeInsets.all(20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Icon(
-            icon,
-            color: isSelected ? Colors.redAccent : Colors.grey,
-            size: 24,
-          ),
-          Text(
-            label,
-            style: TextStyle(
-              color: isSelected ? const Color(0xFFC33F4C) : Colors.grey,
-              fontSize: 12,
-            ),
+          _circleIcon(Icons.arrow_back, () => Navigator.pop(context)),
+          _circleIcon(
+            isFavorite ? Icons.favorite : Icons.favorite_border,
+            _toggleFavorite,
+            color: isFavorite ? Colors.red : Colors.black,
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildTopOverlay() {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            _circleIcon(Icons.arrow_back, () => Navigator.pop(context)),
-            _circleIcon(
-              isFavorite ? Icons.favorite : Icons.favorite_border,
-              _toggleFavorite,
-              color: isFavorite ? Colors.red : Colors.black,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+    ),
+  );
 
   Widget _circleIcon(
     IconData icon,
     VoidCallback onTap, {
     Color color = Colors.black,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          shape: BoxShape.circle,
-        ),
-        child: Icon(icon, color: color, size: 22),
+  }) => GestureDetector(
+    onTap: onTap,
+    child: Container(
+      padding: const EdgeInsets.all(10),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
       ),
-    );
-  }
+      child: Icon(icon, color: color, size: 22),
+    ),
+  );
 
   Widget _sectionLabel(String text) => Text(
     text,
     style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
   );
 
-  Widget _buildSpecsGrid() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  Widget _buildSpecsGrid() => Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    children: [
+      _specCard(Icons.flash_on, "350 HP"),
+      _specCard(Icons.timer, "4.5s"),
+      _specCard(Icons.speed, "300km/h"),
+    ],
+  );
+
+  Widget _specCard(IconData icon, String value) => Container(
+    width: (MediaQuery.of(context).size.width - 60) / 3,
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(15),
+    ),
+    child: Column(
       children: [
-        _specCard(Icons.flash_on, "350 HP", "Power"),
-        _specCard(Icons.timer, "4.5s", "0-60 mph"),
-        _specCard(Icons.speed, "300 km/h", "Top Speed"),
+        Icon(icon, color: Colors.redAccent, size: 20),
+        Text(
+          value,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+        ),
       ],
-    );
-  }
+    ),
+  );
 
-  Widget _specCard(IconData icon, String value, String label) {
-    return Container(
-      width: (MediaQuery.of(context).size.width - 60) / 3,
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: const Color(0xFFC33F4C), size: 20),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
-          Text(label, style: const TextStyle(color: Colors.grey, fontSize: 10)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFeaturesList() {
-    List<String> features = ["Bluetooth", "CarPlay", "360 Camera", "GPS"];
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      children: features
-          .map(
-            (f) => Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xFFFFE9EA),
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: Text(
-                f,
-                style: const TextStyle(color: Color(0xFFC33F4C), fontSize: 12),
-              ),
-            ),
-          )
-          .toList(),
-    );
-  }
-
-  Widget _detailImageLoader(String path) {
-    return path.startsWith('http')
-        ? Image.network(path, fit: BoxFit.cover)
-        : Image.asset(path, fit: BoxFit.cover);
-  }
+  Widget _detailImageLoader(String path) => path.startsWith('http')
+      ? Image.network(path, fit: BoxFit.cover)
+      : Image.asset(path, fit: BoxFit.cover);
 }

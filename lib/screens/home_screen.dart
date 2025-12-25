@@ -2,7 +2,9 @@ import 'package:car_rental_app/screens/addnewcar_screen.dart';
 import 'package:car_rental_app/screens/allcars_screen.dart';
 import 'package:car_rental_app/screens/booking_history.dart';
 import 'package:car_rental_app/screens/cardetail_screen.dart';
+import 'package:car_rental_app/screens/notication_screen.dart';
 import 'package:car_rental_app/screens/profile_screen.dart';
+import 'package:car_rental_app/services/notification_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -260,28 +262,55 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ],
               ),
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (c) => const BookingHistoryScreen(),
+              Row(
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (c) => NotificationScreen()),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white24),
+                      ),
+                      child: const Icon(
+                        Icons.notifications_active_outlined,
+                        color: Colors.white,
+                        size: 26,
+                      ),
                     ),
-                  );
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white24),
                   ),
-                  child: const Icon(
-                    Icons.receipt_long_rounded,
-                    color: Colors.white,
-                    size: 26,
+                  const SizedBox(width: 15),
+
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (c) => const BookingHistoryScreen(),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white24),
+                      ),
+                      child: const Icon(
+                        Icons.calendar_month,
+                        color: Colors.white,
+                        size: 26,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ],
           ),

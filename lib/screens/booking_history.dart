@@ -11,14 +11,12 @@ class BookingHistoryScreen extends StatelessWidget {
     final user = FirebaseAuth.instance.currentUser;
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text(
           "My Bookings",
           style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        elevation: 0,
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
@@ -31,31 +29,63 @@ class BookingHistoryScreen extends StatelessWidget {
 
           var docs = snapshot.data!.docs;
           if (docs.isEmpty)
-            return const Center(child: Text("No bookings yet!"));
+            return const Center(child: Text("No bookings found"));
+
+          // Latest sorting
+          docs.sort((a, b) {
+            var t1 =
+                (a.data() as Map<String, dynamic>)['createdAt'] as Timestamp? ??
+                Timestamp.now();
+            var t2 =
+                (b.data() as Map<String, dynamic>)['createdAt'] as Timestamp? ??
+                Timestamp.now();
+            return t2.compareTo(t1);
+          });
 
           return ListView.builder(
             itemCount: docs.length,
             padding: const EdgeInsets.all(15),
             itemBuilder: (context, index) {
-              var booking = docs[index].data() as Map<String, dynamic>;
+              var data = docs[index].data() as Map<String, dynamic>;
+
+              String dTime = "N/A";
+              String dDate = "N/A";
+
+              var timestamp = data['bookingTime'] ?? data['bookingDateTime'];
+              if (timestamp != null && timestamp is Timestamp) {
+                DateTime dt = timestamp.toDate();
+                dDate = "${dt.day}/${dt.month}/${dt.year}";
+                int h = dt.hour > 12
+                    ? dt.hour - 12
+                    : (dt.hour == 0 ? 12 : dt.hour);
+                String p = dt.hour >= 12 ? "PM" : "AM";
+                dTime = "$h:${dt.minute.toString().padLeft(2, '0')} $p";
+              }
+
               return Card(
-                margin: const EdgeInsets.only(bottom: 15),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
                 child: ListTile(
-                  leading: const Icon(
-                    Icons.directions_car,
-                    color: Colors.redAccent,
-                  ),
                   title: Text(
-                    booking['carName'] ?? "Car Name",
+                    data['carName'] ?? "Car",
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  subtitle: Text(
-                    "Status: ${booking['status']}\nPrice: \$${booking['price']}",
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Status: ${data['status']}",
+                        style: const TextStyle(color: Colors.green),
+                      ),
+                      Row(
+                        children: [
+                          const Icon(Icons.calendar_today, size: 12),
+                          Text(" $dDate  "),
+                          const Icon(Icons.access_time, size: 12),
+                          Text(" $dTime"),
+                        ],
+                      ),
+                    ],
                   ),
-                  trailing: const Icon(Icons.check_circle, color: Colors.green),
+                  trailing: Text("\$${data['price']}"),
                 ),
               );
             },
