@@ -12,9 +12,11 @@ import 'screens/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   await NotificationService.init();
-  await Firebase.initializeApp();
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   runApp(const MyApp());
 }
 
@@ -30,10 +32,16 @@ class MyApp extends StatelessWidget {
       home: StreamBuilder<User?>(
         stream: FirebaseAuth.instance.authStateChanges(),
         builder: (context, snapshot) {
+          // Jab tak connection check ho raha ho
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
           if (snapshot.hasData) {
             return const HomeScreen();
           } else {
-            return const LoginScreen();
+            return const WelcomeScreen(); // Behtar hai pehle welcome screen dikhaein
           }
         },
       ),
@@ -50,6 +58,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
+// Model classes ko koshish karein alag file mein rakhein
 class Car {
   final String name, image, rating, price;
   Car({
@@ -60,5 +69,4 @@ class Car {
   });
 }
 
-// Ye list poori app mein favorites save rakhegi
 List<Car> favoriteCars = [];

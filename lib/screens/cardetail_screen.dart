@@ -73,7 +73,6 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
   Future<void> _showBookingDialog() async {
     if (user == null) return;
 
-    // 1. DATE PICKER (Red Accent Theme)
     DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -95,7 +94,6 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
     );
     if (pickedDate == null) return;
 
-    // 2. TIME PICKER (Red Accent Theme)
     TimeOfDay? pickedTime = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.now(),
@@ -115,7 +113,6 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
     );
     if (pickedTime == null) return;
 
-    // 3. COMBINE DATE & TIME
     DateTime bookingDateTime = DateTime(
       pickedDate.year,
       pickedDate.month,
@@ -124,22 +121,24 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
       pickedTime.minute,
     );
 
-    // ✅ Formatting time for notification body (Fixes "N/A" issue)
     String formattedTime = pickedTime.format(context);
 
     try {
-      // 4. SAVE TO FIRESTORE
       await FirebaseFirestore.instance.collection('bookings').add({
         'userId': user!.uid,
         'carName': widget.name,
-        'carImage': widget.image,
-        'bookingTime': bookingDateTime,
-        'price': widget.price,
-        'status': 'Confirmed',
+        'bookingDateTime': bookingDateTime,
         'createdAt': FieldValue.serverTimestamp(),
+        'status': 'Confirmed',
       });
 
-      // 5. SUCCESS SNACKBAR
+      await NotificationService.scheduleNotification(
+        widget.name.hashCode, // Unique ID
+        "Booking Confirmed! 🚗",
+        "Aapki ${widget.name} ka pickup time $formattedTime hai.",
+        bookingDateTime, // Jo date time select kiya
+      );
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -148,16 +147,8 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
           backgroundColor: Colors.green,
         ),
       );
-
-      // 6. SCHEDULE NOTIFICATION
-      await NotificationService.scheduleNotification(
-        widget.name.hashCode,
-        "Reminder: ${widget.name}",
-        "Aapka pickup time $formattedTime hai. Gari ready hai! 🚗",
-        bookingDateTime,
-      );
     } catch (e) {
-      print("Booking Error: $e");
+      print(e);
     }
   }
 

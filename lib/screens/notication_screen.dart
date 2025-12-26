@@ -24,12 +24,16 @@ class NotificationScreen extends StatelessWidget {
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
-            .collection('bookings') // Aapka data 'bookings' mein hai
+            .collection('bookings')
             .where('userId', isEqualTo: user?.uid)
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return const Center(child: Text("Kuch galat hua hai!"));
           }
 
           var docs = snapshot.data?.docs ?? [];
@@ -38,10 +42,19 @@ class NotificationScreen extends StatelessWidget {
             return const Center(child: Text("No new notifications"));
           }
 
-          // Latest on Top Sorting
+          // ✅ Pehle check karein ke fields exist karte hain phir sort karein
           docs.sort((a, b) {
-            Timestamp t1 = a['createdAt'] ?? Timestamp.now();
-            Timestamp t2 = b['createdAt'] ?? Timestamp.now();
+            Map<String, dynamic> dataA = a.data() as Map<String, dynamic>;
+            Map<String, dynamic> dataB = b.data() as Map<String, dynamic>;
+
+            Timestamp t1 =
+                dataA.containsKey('createdAt') && dataA['createdAt'] != null
+                ? dataA['createdAt']
+                : Timestamp.now();
+            Timestamp t2 =
+                dataB.containsKey('createdAt') && dataB['createdAt'] != null
+                ? dataB['createdAt']
+                : Timestamp.now();
             return t2.compareTo(t1);
           });
 
@@ -51,9 +64,9 @@ class NotificationScreen extends StatelessWidget {
             itemBuilder: (context, index) {
               var data = docs[index].data() as Map<String, dynamic>;
 
-              // --- 12-HOUR FORMAT LOGIC ---
-              String formattedTime = "N/A";
-              if (data['createdAt'] != null) {
+              // --- 12-HOUR FORMAT LOGIC (Created At) ---
+              String formattedTime = "Recently";
+              if (data.containsKey('createdAt') && data['createdAt'] != null) {
                 DateTime dt = (data['createdAt'] as Timestamp).toDate();
                 int hour = dt.hour > 12
                     ? dt.hour - 12
@@ -64,8 +77,9 @@ class NotificationScreen extends StatelessWidget {
               }
 
               // --- PICKUP TIME LOGIC (bookingDateTime) ---
-              String pickupTime = "N/A";
-              if (data['bookingDateTime'] != null) {
+              String pickupTime = "Not Set";
+              if (data.containsKey('bookingDateTime') &&
+                  data['bookingDateTime'] != null) {
                 DateTime dtPick = (data['bookingDateTime'] as Timestamp)
                     .toDate();
                 int h = dtPick.hour > 12
@@ -92,11 +106,11 @@ class NotificationScreen extends StatelessWidget {
                     ),
                   ),
                   title: Text(
-                    "Reminder: ${data['carName'] ?? 'Car'}", // Braces removed where possible
+                    "Reminder: ${data['carName'] ?? 'Car'}",
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   subtitle: Text(
-                    "Aapka pickup time $pickupTime hai.", // Variable name fixed
+                    "Aapka pickup time $pickupTime hai.",
                     style: const TextStyle(fontSize: 12),
                   ),
                   trailing: Text(
