@@ -4,10 +4,11 @@ import 'package:car_rental_app/screens/booking_history.dart';
 import 'package:car_rental_app/screens/cardetail_screen.dart';
 import 'package:car_rental_app/screens/notication_screen.dart';
 import 'package:car_rental_app/screens/profile_screen.dart';
-import 'package:car_rental_app/services/notification_service.dart';
+import 'package:car_rental_app/utils/apptheme.dart/themesettings.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -74,90 +75,103 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder<User?>(
-      stream: FirebaseAuth.instance.userChanges(),
-      builder: (context, authSnapshot) {
-        final User? currentUser = authSnapshot.data;
-        final String displayName =
-            currentUser?.displayName ?? currentUser?.email ?? "Welcome";
+    return ValueListenableBuilder<bool>(
+      valueListenable: ThemeSettings.isDarkMode,
+      builder: (context, isDark, child) {
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: isDark
+              ? SystemUiOverlayStyle.light
+              : SystemUiOverlayStyle.dark,
+          child: StreamBuilder<User?>(
+            stream: FirebaseAuth.instance.userChanges(),
+            builder: (context, authSnapshot) {
+              final User? currentUser = authSnapshot.data;
+              final String displayName =
+                  currentUser?.displayName ?? currentUser?.email ?? "Welcome";
 
-        return Scaffold(
-          backgroundColor: Colors.white,
-          appBar: _buildAppBar(context),
-          floatingActionButton: _buildFAB(context),
-          bottomNavigationBar: _buildBottomNav(),
-          body: navIndex == 2
-              ? _buildFavoritesScreen()
-              : SafeArea(
-                  child: Column(
-                    children: [
-                      _buildGradientHeader(displayName),
-                      Expanded(
-                        child: SingleChildScrollView(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const SizedBox(height: 30),
-                              if (_searchQuery.isNotEmpty) ...[
-                                _sectionTitle("Matching Results 🔍"),
-                                const SizedBox(height: 15),
-                                _buildSearchSection(),
-                                const SizedBox(height: 30),
-                              ],
-                              _sectionTitle("Categories"),
-                              const SizedBox(height: 15),
-                              _buildDynamicCategories(),
+              return Scaffold(
+                extendBodyBehindAppBar: true,
+                backgroundColor: ThemeSettings.scaffoldColor,
+                appBar: _buildAppBar(context),
+                floatingActionButton: _buildFAB(context),
+                bottomNavigationBar: _buildBottomNav(),
+                body: navIndex == 2
+                    ? _buildFavoritesScreen()
+                    : SafeArea(
+                        child: Column(
+                          children: [
+                            _buildGradientHeader(displayName),
+                            Expanded(
+                              child: SingleChildScrollView(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const SizedBox(height: 30),
+                                    if (_searchQuery.isNotEmpty) ...[
+                                      _sectionTitle("Matching Results 🔍"),
+                                      const SizedBox(height: 15),
+                                      _buildSearchSection(),
+                                      const SizedBox(height: 30),
+                                    ],
+                                    _sectionTitle("Categories"),
+                                    const SizedBox(height: 15),
+                                    _buildDynamicCategories(),
 
-                              const SizedBox(height: 30),
-                              _sectionTitle(
-                                selectedCategory == "All"
-                                    ? "All Collections"
-                                    : "$selectedCategory Collections",
-                                onViewAll: () => _navigateToViewAll(
-                                  context,
-                                  "Collections",
-                                  category: selectedCategory,
+                                    const SizedBox(height: 30),
+                                    _sectionTitle(
+                                      selectedCategory == "All"
+                                          ? "All Collections"
+                                          : "$selectedCategory Collections",
+                                      onViewAll: () => _navigateToViewAll(
+                                        context,
+                                        "Collections",
+                                        category: selectedCategory,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 15),
+                                    _buildCategorySpecificHorizontal(),
+
+                                    const SizedBox(height: 30),
+                                    _sectionTitle(
+                                      "Featured Cars",
+                                      onViewAll: () => _navigateToViewAll(
+                                        context,
+                                        "Featured Cars",
+                                        onlyFeatured: true,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 15),
+                                    _buildFeaturedCarsFirestore(),
+
+                                    const SizedBox(height: 10),
+                                    _buildDotIndicatorRow(),
+
+                                    const SizedBox(height: 30),
+                                    _sectionTitle(
+                                      "Popular Deals",
+                                      onViewAll: () => _navigateToViewAll(
+                                        context,
+                                        "Popular Deals",
+                                        onlyPopular: true,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 20),
+                                    _buildPopularDealsFirestore(),
+
+                                    const SizedBox(height: 30),
+                                  ],
                                 ),
                               ),
-                              const SizedBox(height: 15),
-                              _buildCategorySpecificHorizontal(),
-
-                              const SizedBox(height: 30),
-                              _sectionTitle(
-                                "Featured Cars",
-                                onViewAll: () => _navigateToViewAll(
-                                  context,
-                                  "Featured Cars",
-                                  onlyFeatured: true,
-                                ),
-                              ),
-                              const SizedBox(height: 15),
-                              _buildFeaturedCarsFirestore(),
-
-                              const SizedBox(height: 10),
-                              _buildDotIndicatorRow(),
-
-                              const SizedBox(height: 30),
-                              _sectionTitle(
-                                "Popular Deals",
-                                onViewAll: () => _navigateToViewAll(
-                                  context,
-                                  "Popular Deals",
-                                  onlyPopular: true,
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-                              _buildPopularDealsFirestore(),
-
-                              const SizedBox(height: 30),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
-                ),
+              );
+            },
+          ),
         );
       },
     );
@@ -206,7 +220,7 @@ class _HomeScreenState extends State<HomeScreen> {
           style: GoogleFonts.poppins(
             fontSize: 18,
             fontWeight: FontWeight.w600,
-            color: Colors.black,
+            color: ThemeSettings.mainTextColor,
           ),
         ),
         if (onViewAll != null)
@@ -369,45 +383,61 @@ class _HomeScreenState extends State<HomeScreen> {
             if (name.isNotEmpty && name != "All") categories.add(name);
           }
         }
-        return SizedBox(
-          height: 40,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: categories.length,
-            itemBuilder: (context, index) {
-              bool isSelected = categoryIndex == index;
-              return Padding(
-                padding: const EdgeInsets.only(right: 10),
-                child: GestureDetector(
-                  onTap: () => setState(() {
-                    categoryIndex = index;
-                    selectedCategory = categories[index];
-                  }),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 8,
-                      horizontal: 18,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? Colors.redAccent
-                          : Colors.grey.shade200,
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    child: Text(
-                      categories[index],
-                      style: TextStyle(
-                        color: isSelected ? Colors.white : Colors.black,
-                        fontWeight: isSelected
-                            ? FontWeight.bold
-                            : FontWeight.normal,
+
+        // We use ValueListenableBuilder here to ensure the category colors
+        // flip immediately when the theme is toggled.
+        return ValueListenableBuilder<bool>(
+          valueListenable: ThemeSettings.isDarkMode,
+          builder: (context, isDarkMode, child) {
+            return SizedBox(
+              height: 40,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: categories.length,
+                itemBuilder: (context, index) {
+                  bool isSelected = categoryIndex == index;
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 10),
+                    child: GestureDetector(
+                      onTap: () => setState(() {
+                        categoryIndex = index;
+                        selectedCategory = categories[index];
+                      }),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 8,
+                          horizontal: 18,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? Colors
+                                    .redAccent // Active color
+                              : ThemeSettings.cardColor, // Dynamic background
+                          borderRadius: BorderRadius.circular(30),
+                          // Optional: add a slight border in dark mode to make chips pop
+                          border: isDarkMode && !isSelected
+                              ? Border.all(color: Colors.white10)
+                              : null,
+                        ),
+                        child: Text(
+                          categories[index],
+                          style: TextStyle(
+                            // Dynamic text color
+                            color: isSelected
+                                ? Colors.white
+                                : ThemeSettings.mainTextColor,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
-              );
-            },
-          ),
+                  );
+                },
+              ),
+            );
+          },
         );
       },
     );
@@ -458,9 +488,13 @@ class _HomeScreenState extends State<HomeScreen> {
           width: 180,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: ThemeSettings.cardColor,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: Colors.grey.shade200),
+            border: Border.all(
+              color: ThemeSettings.isDarkMode.value
+                  ? Colors.white10
+                  : Colors.grey.shade200,
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -469,7 +503,10 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 10),
               Text(
                 car['name'] ?? 'Car',
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: ThemeSettings.mainTextColor,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -567,85 +604,113 @@ class _HomeScreenState extends State<HomeScreen> {
     Map<String, dynamic> car, {
     bool isFavoriteScreen = false,
   }) {
-    return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (c) => CarDetailScreen(
-            image: car['image'] ?? '',
-            name: car['name'] ?? 'Car',
-            rating: (car['rating'] ?? 0).toString(),
-            price: (car['price'] ?? 0).toString(),
-          ),
-        ),
-      ),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 15),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
-        ),
-        child: Row(
-          children: [
-            _imageLoader(car['image'], 60, width: 80),
-            const SizedBox(width: 15),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    car['category'] ?? 'Brand',
-                    style: const TextStyle(fontSize: 10, color: Colors.grey),
-                  ),
-                  Text(
-                    car['name'] ?? 'Car',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    "\$${car['price'] ?? 0}/day",
-                    style: const TextStyle(color: Colors.redAccent),
-                  ),
-                ],
+    // Wrap everything in a listener to detect theme changes
+    return ValueListenableBuilder<bool>(
+      valueListenable: ThemeSettings.isDarkMode,
+      builder: (context, isDarkMode, child) {
+        return GestureDetector(
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (c) => CarDetailScreen(
+                image: car['image'] ?? '',
+                name: car['name'] ?? 'Car',
+                rating: (car['rating'] ?? 0).toString(),
+                price: (car['price'] ?? 0).toString(),
               ),
             ),
-
-            isFavoriteScreen
-                ? IconButton(
-                    icon: const Icon(Icons.delete_outline, color: Colors.red),
-                    onPressed: () async {
-                      final user = FirebaseAuth.instance.currentUser;
-                      if (user == null) return;
-
-                      var snapshot = await FirebaseFirestore.instance
-                          .collection('favorites')
-                          .where('userId', isEqualTo: user.uid)
-                          .where('name', isEqualTo: car['name'])
-                          .get();
-
-                      for (var doc in snapshot.docs) {
-                        await doc.reference.delete();
-                      }
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Removed from Favorites")),
-                      );
-                    },
-                  )
-                : const Icon(
-                    Icons.arrow_forward_ios,
-                    size: 16,
-                    color: Colors.grey,
+          ),
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 15),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              // Use dynamic card color
+              color: ThemeSettings.cardColor,
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(
+                  color: isDarkMode ? Colors.black54 : Colors.black12,
+                  blurRadius: 4,
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                _imageLoader(car['image'], 60, width: 80),
+                const SizedBox(width: 15),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        car['category'] ?? 'Brand',
+                        style: TextStyle(
+                          fontSize: 10,
+                          // Subtle grey that stays visible in both modes
+                          color: isDarkMode ? Colors.white70 : Colors.grey,
+                        ),
+                      ),
+                      Text(
+                        car['name'] ?? 'Car',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: ThemeSettings.mainTextColor,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        "\$${car['price'] ?? 0}/day",
+                        style: const TextStyle(color: Colors.redAccent),
+                      ),
+                    ],
                   ),
-          ],
-        ),
-      ),
+                ),
+                isFavoriteScreen
+                    ? IconButton(
+                        icon: const Icon(
+                          Icons.delete_outline,
+                          color: Colors.red,
+                        ),
+                        onPressed: () async {
+                          final user = FirebaseAuth.instance.currentUser;
+                          if (user == null) return;
+
+                          // 1. Get the favorite document
+                          var snapshot = await FirebaseFirestore.instance
+                              .collection('favorites')
+                              .where('userId', isEqualTo: user.uid)
+                              .where('name', isEqualTo: car['name'])
+                              .get();
+
+                          // 2. Delete the document(s)
+                          for (var doc in snapshot.docs) {
+                            await doc.reference.delete();
+                          }
+
+                          // 3. THE FIX: Check if the screen is still active before showing SnackBar
+                          if (!context.mounted) return;
+
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("Removed from Favorites"),
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        },
+                      )
+                    : Icon(
+                        Icons.arrow_forward_ios,
+                        size: 16,
+                        // Arrow icon also needs to adapt
+                        color: isDarkMode ? Colors.white54 : Colors.grey,
+                      ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -723,16 +788,25 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   AppBar _buildAppBar(BuildContext context) => AppBar(
-    backgroundColor: Colors.white,
     elevation: 0,
+    backgroundColor: Colors.transparent,
     title: Text(
       "Car Rental",
       style: GoogleFonts.poppins(
-        color: Colors.black,
+        color: ThemeSettings.mainTextColor,
         fontWeight: FontWeight.bold,
       ),
     ),
     actions: [
+      IconButton(
+        onPressed: () {
+          ThemeSettings.isDarkMode.value = !ThemeSettings.isDarkMode.value;
+        },
+        icon: Icon(
+          ThemeSettings.isDarkMode.value ? Icons.light_mode : Icons.dark_mode,
+          color: ThemeSettings.mainTextColor,
+        ),
+      ),
       IconButton(
         onPressed: () => Navigator.push(
           context,
@@ -757,7 +831,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildBottomNav() => BottomNavigationBar(
     currentIndex: navIndex,
     selectedItemColor: Colors.redAccent,
-    unselectedItemColor: Colors.black,
+    unselectedItemColor: ThemeSettings.isDarkMode.value
+        ? Colors.white70
+        : Colors.black54,
+    backgroundColor: ThemeSettings.cardColor,
+    type: BottomNavigationBarType.fixed,
     onTap: (i) => setState(() => navIndex = i),
     items: const [
       BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),

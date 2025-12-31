@@ -1,4 +1,5 @@
 import 'package:car_rental_app/services/notification_service.dart';
+import 'package:car_rental_app/utils/apptheme.dart/themesettings.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -59,12 +60,13 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
       }
       setState(() => isFavorite = false);
     } else {
-      await collection.add({
+      await FirebaseFirestore.instance.collection('bookings').add({
         'userId': user!.uid,
         'name': widget.name,
         'image': widget.image,
         'price': widget.price,
         'rating': widget.rating,
+        'createdAt': FieldValue.serverTimestamp(),
       });
       setState(() => isFavorite = true);
     }
@@ -80,10 +82,11 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
       lastDate: DateTime.now().add(const Duration(days: 365)),
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
-          colorScheme: const ColorScheme.light(
+          colorScheme: ColorScheme.light(
             primary: Colors.redAccent,
             onPrimary: Colors.white,
-            onSurface: Colors.black,
+            surface: ThemeSettings.cardColor,
+            onSurface: ThemeSettings.mainTextColor,
           ),
           textButtonTheme: TextButtonThemeData(
             style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
@@ -99,10 +102,11 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
       initialTime: TimeOfDay.now(),
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
-          colorScheme: const ColorScheme.light(
+          colorScheme: ColorScheme.light(
             primary: Colors.redAccent,
             onPrimary: Colors.white,
-            onSurface: Colors.black,
+            surface: ThemeSettings.cardColor,
+            onSurface: ThemeSettings.mainTextColor,
           ),
           textButtonTheme: TextButtonThemeData(
             style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
@@ -130,13 +134,14 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
         'bookingDateTime': bookingDateTime,
         'createdAt': FieldValue.serverTimestamp(),
         'status': 'Confirmed',
+        'price': widget.price,
       });
 
       await NotificationService.scheduleNotification(
-        widget.name.hashCode, // Unique ID
+        widget.name.hashCode,
         "Booking Confirmed! 🚗",
         "Aapki ${widget.name} ka pickup time $formattedTime hai.",
-        bookingDateTime, // Jo date time select kiya
+        bookingDateTime,
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -154,45 +159,53 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FB),
-      body: Stack(
-        children: [
-          SingleChildScrollView(
-            child: Column(
-              children: [
-                _buildHeaderImage(),
-                Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildTitleSection(),
-                      const SizedBox(height: 25),
-                      _sectionLabel("Specifications"),
-                      const SizedBox(height: 15),
-                      _buildSpecsGrid(),
-                      const SizedBox(height: 25),
-                      _sectionLabel("Description"),
-                      const SizedBox(height: 10),
-                      Text(
-                        "Experience the raw power and elegance of the ${widget.name}. Built for those who lead.",
-                        style: GoogleFonts.poppins(
-                          color: Colors.grey[600],
-                          height: 1.6,
-                        ),
+    return ValueListenableBuilder<bool>(
+      valueListenable: ThemeSettings.isDarkMode,
+      builder: (context, isDark, child) {
+        return Scaffold(
+          backgroundColor: ThemeSettings.scaffoldColor,
+          body: Stack(
+            children: [
+              SingleChildScrollView(
+                child: Column(
+                  children: [
+                    _buildHeaderImage(),
+                    Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildTitleSection(),
+                          const SizedBox(height: 25),
+                          _sectionLabel("Specifications"),
+                          const SizedBox(height: 15),
+                          _buildSpecsGrid(),
+                          const SizedBox(height: 25),
+                          _sectionLabel("Description"),
+                          const SizedBox(height: 10),
+                          Text(
+                            "Experience the raw power and elegance of the ${widget.name}. Built for those who lead.",
+                            style: GoogleFonts.poppins(
+                              color: isDark ? Colors.white70 : Colors.grey[600],
+                              height: 1.6,
+                            ),
+                          ),
+                          const SizedBox(height: 150),
+                        ],
                       ),
-                      const SizedBox(height: 150),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+              _buildTopOverlay(),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: _buildBookingBar(),
+              ),
+            ],
           ),
-          _buildTopOverlay(),
-          Align(alignment: Alignment.bottomCenter, child: _buildBookingBar()),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -223,11 +236,17 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
                 style: GoogleFonts.poppins(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
+                  color: ThemeSettings.mainTextColor,
                 ),
               ),
               Text(
                 "Premium Collection",
-                style: GoogleFonts.poppins(color: Colors.grey, fontSize: 14),
+                style: GoogleFonts.poppins(
+                  color: ThemeSettings.isDarkMode.value
+                      ? Colors.white54
+                      : Colors.grey,
+                  fontSize: 14,
+                ),
               ),
             ],
           ),
@@ -235,13 +254,17 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: ThemeSettings.cardColor, // Changed
             borderRadius: BorderRadius.circular(15),
           ),
           child: Row(
             children: [
               const Icon(Icons.star, color: Colors.amber, size: 18),
-              Text(widget.rating),
+              const SizedBox(width: 4),
+              Text(
+                widget.rating,
+                style: TextStyle(color: ThemeSettings.mainTextColor), // Changed
+              ),
             ],
           ),
         ),
@@ -252,9 +275,16 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
   Widget _buildBookingBar() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+      decoration: BoxDecoration(
+        color: ThemeSettings.cardColor, // Changed
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -309,32 +339,40 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
           _circleIcon(
             isFavorite ? Icons.favorite : Icons.favorite_border,
             _toggleFavorite,
-            color: isFavorite ? Colors.red : Colors.black,
+            color: isFavorite
+                ? Colors.red
+                : ThemeSettings.mainTextColor, // Changed
           ),
         ],
       ),
     ),
   );
 
-  Widget _circleIcon(
-    IconData icon,
-    VoidCallback onTap, {
-    Color color = Colors.black,
-  }) => GestureDetector(
-    onTap: onTap,
-    child: Container(
-      padding: const EdgeInsets.all(10),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        shape: BoxShape.circle,
-      ),
-      child: Icon(icon, color: color, size: 22),
-    ),
-  );
+  Widget _circleIcon(IconData icon, VoidCallback onTap, {Color? color}) =>
+      GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: ThemeSettings.cardColor, // Changed
+            shape: BoxShape.circle,
+            boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
+          ),
+          child: Icon(
+            icon,
+            color: color ?? ThemeSettings.mainTextColor,
+            size: 22,
+          ), // Changed
+        ),
+      );
 
   Widget _sectionLabel(String text) => Text(
     text,
-    style: GoogleFonts.poppins(fontSize: 18, fontWeight: FontWeight.bold),
+    style: GoogleFonts.poppins(
+      fontSize: 18,
+      fontWeight: FontWeight.bold,
+      color: ThemeSettings.mainTextColor, // Changed
+    ),
   );
 
   Widget _buildSpecsGrid() => Row(
@@ -350,15 +388,20 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
     width: (MediaQuery.of(context).size.width - 60) / 3,
     padding: const EdgeInsets.all(12),
     decoration: BoxDecoration(
-      color: Colors.white,
+      color: ThemeSettings.cardColor, // Changed
       borderRadius: BorderRadius.circular(15),
+      border: Border.all(color: Colors.grey.withOpacity(0.1)),
     ),
     child: Column(
       children: [
         Icon(icon, color: Colors.redAccent, size: 20),
         Text(
           value,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+            color: ThemeSettings.mainTextColor, // Changed
+          ),
         ),
       ],
     ),

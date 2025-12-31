@@ -1,4 +1,5 @@
 import 'package:car_rental_app/screens/cardetail_screen.dart';
+import 'package:car_rental_app/utils/apptheme.dart/themesettings.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
@@ -41,7 +42,7 @@ class CarCards {
           width: 180,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: ThemeSettings.cardColor,
             borderRadius: BorderRadius.circular(18),
             border: Border.all(color: Colors.grey.shade200),
           ),
@@ -52,14 +53,24 @@ class CarCards {
               const SizedBox(height: 10),
               Text(
                 car['name'] ?? 'Car',
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: ThemeSettings.mainTextColor,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
               Row(
                 children: [
-                  const Icon(Icons.star, color: Colors.amber, size: 14),
-                  Text(" ${car['rating'] ?? 0}"),
+                  Icon(
+                    Icons.star,
+                    color: ThemeSettings.mainTextColor.withOpacity(0.7),
+                    size: 14,
+                  ),
+                  Text(
+                    " ${car['rating'] ?? 0}",
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                  ),
                 ],
               ),
               const Spacer(),
@@ -101,7 +112,9 @@ class CarCards {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withOpacity(
+                ThemeSettings.isDarkMode.value ? 0.2 : 0.04,
+              ),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -117,9 +130,10 @@ class CarCards {
                 children: [
                   Text(
                     car['name'] ?? 'Car Name',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
+                      color: ThemeSettings.mainTextColor,
                     ),
                   ),
                   Row(
@@ -128,8 +142,8 @@ class CarCards {
                       const SizedBox(width: 4),
                       Text(
                         "${car['rating'] ?? 4.8}",
-                        style: const TextStyle(
-                          color: Colors.grey,
+                        style: TextStyle(
+                          color: ThemeSettings.mainTextColor.withOpacity(0.6),
                           fontSize: 12,
                         ),
                       ),
@@ -153,7 +167,9 @@ class CarCards {
                           vertical: 7,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFC33F4C).withOpacity(0.1),
+                          color: const Color(0xFFC33F4C).withOpacity(
+                            ThemeSettings.isDarkMode.value ? 0.2 : 0.1,
+                          ),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Text(
