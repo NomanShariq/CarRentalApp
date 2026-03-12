@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart'; // Added for debugPrint
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -8,10 +9,12 @@ class NotificationService {
 
   static Future<void> init() async {
     tz.initializeTimeZones();
+
     // Pakistan Timezone setup
     try {
       tz.setLocalLocation(tz.getLocation('Asia/Karachi'));
     } catch (e) {
+      debugPrint("Timezone error: $e. Falling back to UTC.");
       tz.setLocalLocation(tz.getLocation('UTC'));
     }
 
@@ -26,7 +29,7 @@ class NotificationService {
     await _notificationsPlugin.initialize(
       settings,
       onDidReceiveNotificationResponse: (details) {
-        print("Notification clicked!");
+        debugPrint("Notification clicked with payload: ${details.payload}");
       },
     );
 
@@ -35,7 +38,9 @@ class NotificationService {
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
         >();
+
     if (androidPlugin != null) {
+      // It's good practice to check if these methods exist on the current OS version
       await androidPlugin.requestNotificationsPermission();
       await androidPlugin.requestExactAlarmsPermission();
     }
@@ -48,7 +53,7 @@ class NotificationService {
     DateTime scheduledTime,
   ) async {
     try {
-      // Agar time guzar gaya ho toh foran dikha do ya skip karo
+      // If time has passed, schedule for 5 seconds from now
       if (scheduledTime.isBefore(DateTime.now())) {
         scheduledTime = DateTime.now().add(const Duration(seconds: 5));
       }
@@ -72,9 +77,9 @@ class NotificationService {
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
       );
-      print("Notification scheduled successfully for $scheduledTime");
+      debugPrint("Notification scheduled successfully for $scheduledTime");
     } catch (e) {
-      print("Error scheduling notification: $e");
+      debugPrint("Error scheduling notification: $e");
     }
   }
 }

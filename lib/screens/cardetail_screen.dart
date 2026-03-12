@@ -1,5 +1,5 @@
 import 'package:car_rental_app/services/notification_service.dart';
-import 'package:car_rental_app/utils/apptheme.dart/themesettings.dart';
+import 'package:car_rental_app/utils/apptheme/themesettings.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -54,13 +54,16 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
         .where('name', isEqualTo: widget.name)
         .get();
 
+    if (!mounted) return; // Guard 1
+
     if (isFavorite) {
       for (var doc in query.docs) {
         await collection.doc(doc.id).delete();
       }
+      if (!mounted) return; // Guard 2
       setState(() => isFavorite = false);
     } else {
-      await FirebaseFirestore.instance.collection('bookings').add({
+      await FirebaseFirestore.instance.collection('favorites').add({
         'userId': user!.uid,
         'name': widget.name,
         'image': widget.image,
@@ -68,6 +71,7 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
         'rating': widget.rating,
         'createdAt': FieldValue.serverTimestamp(),
       });
+      if (!mounted) return; // Guard 3
       setState(() => isFavorite = true);
     }
   }
@@ -95,7 +99,8 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
         child: child!,
       ),
     );
-    if (pickedDate == null) return;
+
+    if (pickedDate == null || !mounted) return;
 
     TimeOfDay? pickedTime = await showTimePicker(
       context: context,
@@ -115,7 +120,8 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
         child: child!,
       ),
     );
-    if (pickedTime == null) return;
+
+    if (pickedTime == null || !mounted) return;
 
     DateTime bookingDateTime = DateTime(
       pickedDate.year,
@@ -144,6 +150,8 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
         bookingDateTime,
       );
 
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -153,7 +161,7 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
         ),
       );
     } catch (e) {
-      print(e);
+      debugPrint(e.toString()); // Replaced print
     }
   }
 
@@ -254,7 +262,7 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: ThemeSettings.cardColor, // Changed
+            color: ThemeSettings.cardColor,
             borderRadius: BorderRadius.circular(15),
           ),
           child: Row(
@@ -263,7 +271,7 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
               const SizedBox(width: 4),
               Text(
                 widget.rating,
-                style: TextStyle(color: ThemeSettings.mainTextColor), // Changed
+                style: TextStyle(color: ThemeSettings.mainTextColor),
               ),
             ],
           ),
@@ -276,11 +284,11 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 25),
       decoration: BoxDecoration(
-        color: ThemeSettings.cardColor, // Changed
+        color: ThemeSettings.cardColor,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(30)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1), // Fixed deprecation
             blurRadius: 10,
             offset: const Offset(0, -2),
           ),
@@ -339,9 +347,7 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
           _circleIcon(
             isFavorite ? Icons.favorite : Icons.favorite_border,
             _toggleFavorite,
-            color: isFavorite
-                ? Colors.red
-                : ThemeSettings.mainTextColor, // Changed
+            color: isFavorite ? Colors.red : ThemeSettings.mainTextColor,
           ),
         ],
       ),
@@ -354,15 +360,15 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
         child: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: ThemeSettings.cardColor, // Changed
+            color: ThemeSettings.cardColor,
             shape: BoxShape.circle,
-            boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4)],
+            boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
           ),
           child: Icon(
             icon,
             color: color ?? ThemeSettings.mainTextColor,
             size: 22,
-          ), // Changed
+          ),
         ),
       );
 
@@ -371,7 +377,7 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
     style: GoogleFonts.poppins(
       fontSize: 18,
       fontWeight: FontWeight.bold,
-      color: ThemeSettings.mainTextColor, // Changed
+      color: ThemeSettings.mainTextColor,
     ),
   );
 
@@ -388,9 +394,11 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
     width: (MediaQuery.of(context).size.width - 60) / 3,
     padding: const EdgeInsets.all(12),
     decoration: BoxDecoration(
-      color: ThemeSettings.cardColor, // Changed
+      color: ThemeSettings.cardColor,
       borderRadius: BorderRadius.circular(15),
-      border: Border.all(color: Colors.grey.withOpacity(0.1)),
+      border: Border.all(
+        color: Colors.grey.withValues(alpha: 0.1),
+      ), // Fixed deprecation
     ),
     child: Column(
       children: [
@@ -400,7 +408,7 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 12,
-            color: ThemeSettings.mainTextColor, // Changed
+            color: ThemeSettings.mainTextColor,
           ),
         ),
       ],
@@ -408,6 +416,11 @@ class _CarDetailScreenState extends State<CarDetailScreen> {
   );
 
   Widget _detailImageLoader(String path) => path.startsWith('http')
-      ? Image.network(path, fit: BoxFit.cover)
+      ? Image.network(
+          path,
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) =>
+              const Icon(Icons.broken_image, size: 50),
+        )
       : Image.asset(path, fit: BoxFit.cover);
 }

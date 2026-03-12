@@ -3,6 +3,7 @@ import 'package:car_rental_app/screens/profile_screen.dart';
 import 'package:car_rental_app/screens/signup_screen.dart';
 import 'package:car_rental_app/screens/welcome_screen.dart';
 import 'package:car_rental_app/services/notification_service.dart';
+import 'package:car_rental_app/utils/apptheme/themesettings.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -16,7 +17,7 @@ void main() async {
   await NotificationService.init();
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
+  await ThemeSettings.init();
   runApp(const MyApp());
 }
 

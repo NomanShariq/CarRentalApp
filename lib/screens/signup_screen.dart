@@ -47,8 +47,12 @@ class _SignUpScreenState extends State<SignupScreen> {
         password: password,
       );
 
+      // ✅ FIX: Guard the BuildContext across the async gap
+      if (!mounted) return;
+
       Navigator.pushReplacementNamed(context, '/login');
     } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
       setState(() {
         if (e.code == 'weak-password') {
           _errorMessage = 'The password must be at least 6 characters long.';
@@ -58,6 +62,9 @@ class _SignUpScreenState extends State<SignupScreen> {
           _errorMessage = e.message;
         }
       });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _errorMessage = 'An unexpected error occurred.');
     }
   }
 
@@ -80,7 +87,6 @@ class _SignUpScreenState extends State<SignupScreen> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 const SizedBox(height: 200),
-
                 const Icon(
                   Icons.directions_car_filled,
                   color: tPrimaryColor,
@@ -96,18 +102,16 @@ class _SignUpScreenState extends State<SignupScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
+                const Text(
                   'Enter your details to create a new account.',
                   style: TextStyle(
                     fontSize: 14,
-                    color: const Color.fromARGB(255, 223, 222, 222),
+                    color: Color.fromARGB(255, 223, 222, 222),
                   ),
                 ),
                 const SizedBox(height: 30),
-
                 _buildSignUpForm(),
                 const SizedBox(height: 30),
-
                 TextButton(
                   onPressed: () {
                     Navigator.pushNamed(context, '/login');
@@ -147,7 +151,6 @@ class _SignUpScreenState extends State<SignupScreen> {
           decoration: _buildInputDecoration('Full Name', Icons.person),
         ),
         const SizedBox(height: 15),
-
         TextFormField(
           controller: _emailController,
           keyboardType: TextInputType.emailAddress,
@@ -155,7 +158,6 @@ class _SignUpScreenState extends State<SignupScreen> {
           decoration: _buildInputDecoration('Email Address', Icons.email),
         ),
         const SizedBox(height: 15),
-
         TextFormField(
           controller: _passwordController,
           obscureText: !_isPasswordVisible,
@@ -166,10 +168,9 @@ class _SignUpScreenState extends State<SignupScreen> {
             }),
           ),
         ),
-
         if (_errorMessage != null)
           Padding(
-            padding: const EdgeInsets.only(bottom: 15.0),
+            padding: const EdgeInsets.only(top: 15.0),
             child: Text(
               _errorMessage!,
               style: const TextStyle(
@@ -179,7 +180,6 @@ class _SignUpScreenState extends State<SignupScreen> {
             ),
           ),
         const SizedBox(height: 15),
-
         TextFormField(
           controller: _confirmPasswordController,
           obscureText: !_isConfirmPasswordVisible,
@@ -198,7 +198,6 @@ class _SignUpScreenState extends State<SignupScreen> {
               ),
         ),
         const SizedBox(height: 30),
-
         SizedBox(
           width: double.infinity,
           height: 48,
@@ -227,7 +226,8 @@ class _SignUpScreenState extends State<SignupScreen> {
       labelStyle: TextStyle(color: Colors.grey.shade500, fontSize: 14),
       prefixIcon: Icon(icon, color: Colors.grey.shade500, size: 20),
       filled: true,
-      fillColor: tTextFieldFillColor.withOpacity(0.85),
+      // ✅ FIX: Replaced withOpacity with withValues
+      fillColor: tTextFieldFillColor.withValues(alpha: 0.85),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(10),
         borderSide: BorderSide.none,

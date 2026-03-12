@@ -1,28 +1,26 @@
 import 'package:car_rental_app/main.dart';
-import 'package:car_rental_app/utils/apptheme.dart/themesettings.dart';
+import 'package:car_rental_app/utils/apptheme/themesettings.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class FavoriteScreen extends StatelessWidget {
+class FavoriteScreen extends StatefulWidget {
   const FavoriteScreen({super.key});
 
+  @override
+  State<FavoriteScreen> createState() => _FavoriteScreenState();
+}
+
+class _FavoriteScreenState extends State<FavoriteScreen> {
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<bool>(
       valueListenable: ThemeSettings.isDarkMode,
-      builder: (context, isDarkMode, child) {
-        return AnnotatedRegion<SystemUiOverlayStyle>(
-          value: SystemUiOverlayStyle(
-            statusBarColor: Colors.transparent,
-            statusBarIconBrightness: isDarkMode
-                ? Brightness.light
-                : Brightness.dark,
-          ),
+      builder: (context, isDark, child) {
+        print("Dark Mode is: $isDark");
+        return Container(
+          color: isDark ? const Color(0xFF121212) : Colors.white,
           child: Scaffold(
-            backgroundColor: ThemeSettings.scaffoldColor,
             appBar: AppBar(
-              backgroundColor: Colors.transparent,
               elevation: 0,
               centerTitle: true,
               title: Text(
@@ -33,22 +31,6 @@ class FavoriteScreen extends StatelessWidget {
                   color: ThemeSettings.mainTextColor,
                 ),
               ),
-              leading: IconButton(
-                icon: Icon(
-                  Icons.arrow_back,
-                  color: ThemeSettings.mainTextColor,
-                ),
-                onPressed: () => Navigator.pop(context),
-              ),
-              actions: [
-                Padding(
-                  padding: const EdgeInsets.only(right: 15),
-                  child: CircleAvatar(
-                    radius: 18,
-                    backgroundImage: AssetImage('images/Profile.jpg'),
-                  ),
-                ),
-              ],
             ),
             body: favoriteCars.isEmpty
                 ? Center(
@@ -64,7 +46,7 @@ class FavoriteScreen extends StatelessWidget {
                     itemCount: favoriteCars.length,
                     itemBuilder: (context, index) {
                       final car = favoriteCars[index];
-                      return _buildFavoriteCard(car, isDarkMode);
+                      return _buildFavoriteCard(car, isDark);
                     },
                   ),
           ),
@@ -73,16 +55,16 @@ class FavoriteScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFavoriteCard(dynamic car, bool isDarkMode) {
+  Widget _buildFavoriteCard(dynamic car, bool isDark) {
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
+        color: ThemeSettings.cardColor, // FIX: Card ka color bhi change hoga
         borderRadius: BorderRadius.circular(25),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDarkMode ? 0.4 : 0.05),
+            color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -92,11 +74,16 @@ class FavoriteScreen extends StatelessWidget {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(15),
-            child: Image.asset(
+            child: Image.network(
               car.image,
               width: 100,
               height: 70,
               fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => const Icon(
+                Icons.directions_car,
+                size: 50,
+                color: Colors.grey,
+              ),
             ),
           ),
           const SizedBox(width: 15),
@@ -127,10 +114,7 @@ class FavoriteScreen extends StatelessWidget {
               ],
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-            onPressed: () {},
-          ),
+          const Icon(Icons.delete_outline, color: Colors.redAccent),
         ],
       ),
     );

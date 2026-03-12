@@ -1,11 +1,16 @@
 import 'package:car_rental_app/screens/cardetail_screen.dart';
-import 'package:car_rental_app/utils/apptheme.dart/themesettings.dart';
+import 'package:car_rental_app/utils/apptheme/themesettings.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class CarCards {
   static Widget _imageLoader(dynamic path, double h, {double? width}) {
     String imagePath = path?.toString() ?? "";
+
+    if (imagePath.isEmpty) {
+      return _errorPlaceholder(h, width);
+    }
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(15),
       child: imagePath.startsWith('http')
@@ -14,12 +19,33 @@ class CarCards {
               height: h,
               width: width,
               fit: BoxFit.cover,
-              errorBuilder: (c, e, s) => Container(
-                color: Colors.grey[200],
-                child: const Icon(Icons.car_repair),
-              ),
+              // Shows a loading spinner while the image downloads
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Center(child: CircularProgressIndicator(strokeWidth: 2));
+              },
+              // Shows an icon if the URL is 404 or internet is down
+              errorBuilder: (context, error, stackTrace) =>
+                  _errorPlaceholder(h, width),
             )
-          : Image.asset(imagePath, height: h, width: width, fit: BoxFit.cover),
+          : Image.asset(
+              imagePath,
+              height: h,
+              width: width,
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) =>
+                  _errorPlaceholder(h, width),
+            ),
+    );
+  }
+
+  // Helper for when an image fails
+  static Widget _errorPlaceholder(double h, double? width) {
+    return Container(
+      height: h,
+      width: width ?? double.infinity,
+      color: Colors.grey[200],
+      child: const Icon(Icons.broken_image, color: Colors.grey),
     );
   }
 
@@ -64,7 +90,7 @@ class CarCards {
                 children: [
                   Icon(
                     Icons.star,
-                    color: ThemeSettings.mainTextColor.withOpacity(0.7),
+                    color: ThemeSettings.mainTextColor.withValues(alpha: 0.7),
                     size: 14,
                   ),
                   Text(
@@ -112,8 +138,8 @@ class CarCards {
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(
-                ThemeSettings.isDarkMode.value ? 0.2 : 0.04,
+              color: Colors.black.withValues(
+                alpha: ThemeSettings.isDarkMode.value ? 0.2 : 0.04,
               ),
               blurRadius: 10,
               offset: const Offset(0, 4),
@@ -143,7 +169,9 @@ class CarCards {
                       Text(
                         "${car['rating'] ?? 4.8}",
                         style: TextStyle(
-                          color: ThemeSettings.mainTextColor.withOpacity(0.6),
+                          color: ThemeSettings.mainTextColor.withValues(
+                            alpha: 0.6,
+                          ),
                           fontSize: 12,
                         ),
                       ),
@@ -167,9 +195,7 @@ class CarCards {
                           vertical: 7,
                         ),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFC33F4C).withOpacity(
-                            ThemeSettings.isDarkMode.value ? 0.2 : 0.1,
-                          ),
+                          color: const Color(0xFFC33F4C).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Text(
@@ -199,10 +225,15 @@ class CarCards {
           .where('isFeatured', isEqualTo: false)
           .snapshots(),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting)
+        // ✅ FIXED: Added curly braces to satisfy flow control lint
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
-        if (!snapshot.hasData || snapshot.data!.docs.isEmpty)
+        }
+
+        // ✅ FIXED: Added curly braces
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return const Text("No popular deals.");
+        }
 
         return Column(
           children: snapshot.data!.docs.map((doc) {

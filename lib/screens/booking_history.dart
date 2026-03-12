@@ -1,4 +1,4 @@
-import 'package:car_rental_app/utils/apptheme.dart/themesettings.dart';
+import 'package:car_rental_app/utils/apptheme/themesettings.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';

@@ -4,7 +4,7 @@ import 'package:car_rental_app/screens/booking_history.dart';
 import 'package:car_rental_app/screens/cardetail_screen.dart';
 import 'package:car_rental_app/screens/notication_screen.dart';
 import 'package:car_rental_app/screens/profile_screen.dart';
-import 'package:car_rental_app/utils/apptheme.dart/themesettings.dart';
+import 'package:car_rental_app/utils/apptheme/themesettings.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -79,9 +79,8 @@ class _HomeScreenState extends State<HomeScreen> {
       valueListenable: ThemeSettings.isDarkMode,
       builder: (context, isDark, child) {
         return AnnotatedRegion<SystemUiOverlayStyle>(
-          value: isDark
-              ? SystemUiOverlayStyle.light
-              : SystemUiOverlayStyle.dark,
+          value:
+              isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
           child: StreamBuilder<User?>(
             stream: FirebaseAuth.instance.userChanges(),
             builder: (context, authSnapshot) {
@@ -93,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 extendBodyBehindAppBar: true,
                 backgroundColor: ThemeSettings.scaffoldColor,
                 appBar: _buildAppBar(context),
-                floatingActionButton: _buildFAB(context),
+                floatingActionButton: navIndex == 2 ? null : _buildFAB(context),
                 bottomNavigationBar: _buildBottomNav(),
                 body: navIndex == 2
                     ? _buildFavoritesScreen()
@@ -119,7 +118,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                     _sectionTitle("Categories"),
                                     const SizedBox(height: 15),
                                     _buildDynamicCategories(),
-
                                     const SizedBox(height: 30),
                                     _sectionTitle(
                                       selectedCategory == "All"
@@ -133,7 +131,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                     const SizedBox(height: 15),
                                     _buildCategorySpecificHorizontal(),
-
                                     const SizedBox(height: 30),
                                     _sectionTitle(
                                       "Featured Cars",
@@ -145,10 +142,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                     const SizedBox(height: 15),
                                     _buildFeaturedCarsFirestore(),
-
                                     const SizedBox(height: 10),
                                     _buildDotIndicatorRow(),
-
                                     const SizedBox(height: 30),
                                     _sectionTitle(
                                       "Popular Deals",
@@ -160,7 +155,6 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                     const SizedBox(height: 20),
                                     _buildPopularDealsFirestore(),
-
                                     const SizedBox(height: 30),
                                   ],
                                 ),
@@ -288,7 +282,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.white24),
                       ),
@@ -300,7 +294,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   const SizedBox(width: 15),
-
                   GestureDetector(
                     onTap: () {
                       Navigator.push(
@@ -313,7 +306,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withValues(alpha: 0.15),
                         shape: BoxShape.circle,
                         border: Border.all(color: Colors.white24),
                       ),
@@ -410,8 +403,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? Colors
-                                    .redAccent // Active color
+                              ? Colors.redAccent // Active color
                               : ThemeSettings.cardColor, // Dynamic background
                           borderRadius: BorderRadius.circular(30),
                           // Optional: add a slight border in dark mode to make chips pop
@@ -788,62 +780,63 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   AppBar _buildAppBar(BuildContext context) => AppBar(
-    elevation: 0,
-    backgroundColor: Colors.transparent,
-    title: Text(
-      "Car Rental",
-      style: GoogleFonts.poppins(
-        color: ThemeSettings.mainTextColor,
-        fontWeight: FontWeight.bold,
-      ),
-    ),
-    actions: [
-      IconButton(
-        onPressed: () {
-          ThemeSettings.isDarkMode.value = !ThemeSettings.isDarkMode.value;
-        },
-        icon: Icon(
-          ThemeSettings.isDarkMode.value ? Icons.light_mode : Icons.dark_mode,
-          color: ThemeSettings.mainTextColor,
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        title: Text(
+          "Car Rental",
+          style: GoogleFonts.poppins(
+            color: ThemeSettings.mainTextColor,
+            fontWeight: FontWeight.bold,
+          ),
         ),
-      ),
-      IconButton(
-        onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (c) => const ProfileScreen()),
-        ),
-        icon: const CircleAvatar(
-          backgroundImage: AssetImage('images/Profile.jpg'),
-        ),
-      ),
-    ],
-  );
+        actions: [
+          GestureDetector(
+            onTap: () async {
+              await ThemeSettings.toggleTheme();
+            },
+            child: Icon(
+              ThemeSettings.isDarkMode.value
+                  ? Icons.dark_mode
+                  : Icons.light_mode,
+              color: ThemeSettings.mainTextColor,
+            ),
+          ),
+          IconButton(
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (c) => const ProfileScreen()),
+            ),
+            icon: const CircleAvatar(
+              backgroundImage: AssetImage('images/Profile.jpg'),
+            ),
+          ),
+        ],
+      );
 
   Widget _buildFAB(BuildContext context) => FloatingActionButton(
-    backgroundColor: Colors.redAccent,
-    onPressed: () => Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const AddNewCarScreen()),
-    ),
-    child: const Icon(Icons.add, color: Colors.white),
-  );
+        backgroundColor: Colors.redAccent,
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const AddNewCarScreen()),
+        ),
+        child: const Icon(Icons.add, color: Colors.white),
+      );
 
   Widget _buildBottomNav() => BottomNavigationBar(
-    currentIndex: navIndex,
-    selectedItemColor: Colors.redAccent,
-    unselectedItemColor: ThemeSettings.isDarkMode.value
-        ? Colors.white70
-        : Colors.black54,
-    backgroundColor: ThemeSettings.cardColor,
-    type: BottomNavigationBarType.fixed,
-    onTap: (i) => setState(() => navIndex = i),
-    items: const [
-      BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-      BottomNavigationBarItem(icon: Icon(Icons.search), label: "Search"),
-      BottomNavigationBarItem(
-        icon: Icon(Icons.favorite_border),
-        label: "Favorites",
-      ),
-    ],
-  );
+        currentIndex: navIndex,
+        selectedItemColor: Colors.redAccent,
+        unselectedItemColor:
+            ThemeSettings.isDarkMode.value ? Colors.white70 : Colors.black54,
+        backgroundColor: ThemeSettings.cardColor,
+        type: BottomNavigationBarType.fixed,
+        onTap: (i) => setState(() => navIndex = i),
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
+          BottomNavigationBarItem(icon: Icon(Icons.search), label: "Search"),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.favorite_border),
+            label: "Favorites",
+          ),
+        ],
+      );
 }

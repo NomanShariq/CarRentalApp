@@ -1,4 +1,5 @@
 import 'package:car_rental_app/widgets/car_cards.dart';
+import 'package:car_rental_app/utils/apptheme/themesettings.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -37,20 +38,20 @@ class _AllCarsScreenState extends State<AllCarsScreen> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FB),
+      backgroundColor: ThemeSettings.scaffoldColor,
       appBar: AppBar(
         title: Text(
           widget.title,
           style: GoogleFonts.poppins(
             fontWeight: FontWeight.bold,
-            color: Colors.black,
+            color: ThemeSettings.mainTextColor,
             fontSize: 18,
           ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.white,
+        backgroundColor: ThemeSettings.appBarColor,
         elevation: 0.5,
-        iconTheme: const IconThemeData(color: Colors.black),
+        iconTheme: IconThemeData(color: ThemeSettings.mainTextColor),
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: query.snapshots(),
@@ -61,7 +62,12 @@ class _AllCarsScreenState extends State<AllCarsScreen> {
             );
           }
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return const Center(child: Text("No cars found in this section."));
+            return Center(
+              child: Text(
+                "No cars found in this section.",
+                style: TextStyle(color: ThemeSettings.mainTextColor),
+              ),
+            );
           }
 
           var docs = snapshot.data!.docs;
@@ -100,11 +106,13 @@ class _AllCarsScreenState extends State<AllCarsScreen> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: ThemeSettings.cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withOpacity(
+              ThemeSettings.isDarkMode.value ? 0.3 : 0.05,
+            ),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -117,13 +125,17 @@ class _AllCarsScreenState extends State<AllCarsScreen> {
             child: Center(
               child: car['image'] != null
                   ? Image.network(car['image'], fit: BoxFit.contain)
-                  : const Icon(Icons.car_rental, size: 50),
+                  : const Icon(Icons.car_rental, size: 50, color: Colors.grey),
             ),
           ),
           const SizedBox(height: 8),
           Text(
             car['name'] ?? 'Car',
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+              color: ThemeSettings.mainTextColor,
+            ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),

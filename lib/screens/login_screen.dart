@@ -45,20 +45,19 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (user != null && user.displayName == null) {
         final defaultName = email.split('@')[0];
-
         await user.updateDisplayName(defaultName);
-
         await user.reload();
-        print('User name updated successfully to: $defaultName');
+        debugPrint('User name updated successfully to: $defaultName');
       }
 
-      if (mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-          (Route<dynamic> route) => false,
-        );
-      }
+      if (!mounted) return; // Guard for context use
+
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+        (Route<dynamic> route) => false,
+      );
     } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
       setState(() {
         if (e.code == 'user-not-found') {
           _errorMessage = 'No user found for that email.';
@@ -70,10 +69,11 @@ class _LoginScreenState extends State<LoginScreen> {
           _errorMessage = e.message;
         }
       });
-      print("Login failed with Firebase exception: ${e.code}");
+      debugPrint("Login failed with Firebase exception: ${e.code}");
     } catch (e) {
+      if (!mounted) return;
       setState(() => _errorMessage = 'An unexpected error occurred.');
-      print("Login failed with general error: $e");
+      debugPrint("Login failed with general error: $e");
     }
   }
 
@@ -94,15 +94,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
       await _auth.signInWithCredential(credential);
 
-      if (mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-          (Route<dynamic> route) => false,
-        );
-      }
+      if (!mounted) return; // Guard for context use
+
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+        (Route<dynamic> route) => false,
+      );
     } catch (e) {
+      if (!mounted) return;
       setState(() => _errorMessage = 'Google Sign-In failed.');
-      print("Error details: $e");
+      debugPrint("Error details: $e");
     }
   }
 
@@ -116,7 +117,6 @@ class _LoginScreenState extends State<LoginScreen> {
           colorFilter: ColorFilter.mode(Colors.black54, BlendMode.darken),
         ),
       ),
-
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: SingleChildScrollView(
@@ -128,7 +128,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 200),
                 const Icon(
                   Icons.directions_car_filled,
-                  color: Color.fromARGB(255, 187, 56, 56),
+                  color: tPrimaryColor,
                   size: 80,
                 ),
                 const SizedBox(height: 10),
@@ -141,10 +141,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: 10),
-
                 _buildLoginForm(context),
                 const SizedBox(height: 20),
-
                 const Text(
                   'Or connect with',
                   style: TextStyle(color: Colors.white),
@@ -152,7 +150,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 20),
                 _buildSocialLoginButtons(),
                 const SizedBox(height: 30),
-
                 TextButton(
                   onPressed: () {
                     Navigator.pushNamed(context, '/signUp');
@@ -219,7 +216,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
           ),
-
         Align(
           alignment: Alignment.centerRight,
           child: TextButton(
@@ -228,13 +224,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 await FirebaseAuth.instance.sendPasswordResetEmail(
                   email: _emailController.text.trim(),
                 );
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Password reset link sent to email!'),
-                  ),
-                );
+                if (!context.mounted) return;
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text("Done!")));
               } catch (e) {
-                print(e);
+                debugPrint(e.toString());
               }
             },
             child: const Text(
@@ -244,7 +239,6 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
         ),
         const SizedBox(height: 20),
-
         SizedBox(
           width: double.infinity,
           height: 48,
@@ -272,7 +266,9 @@ class _LoginScreenState extends State<LoginScreen> {
       labelStyle: TextStyle(color: Colors.grey.shade500),
       prefixIcon: Icon(icon, color: Colors.grey.shade500),
       filled: true,
-      fillColor: tTextFieldFillColor.withOpacity(0.85),
+      fillColor: tTextFieldFillColor.withValues(
+        alpha: 0.85,
+      ), // Fixed deprecation
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,
@@ -304,7 +300,6 @@ class _LoginScreenState extends State<LoginScreen> {
           _signInWithGoogle,
         ),
         const SizedBox(width: 20),
-
         _buildSocialButton(FontAwesomeIcons.instagram, Colors.purple, () {}),
       ],
     );
@@ -317,7 +312,7 @@ class _LoginScreenState extends State<LoginScreen> {
   ) {
     return Container(
       decoration: BoxDecoration(
-        color: tTextFieldFillColor.withOpacity(0.85),
+        color: tTextFieldFillColor.withValues(alpha: 0.85), // Fixed deprecation
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.shade700),
       ),

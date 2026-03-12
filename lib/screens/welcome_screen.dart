@@ -26,7 +26,7 @@ class WelcomeScreen extends StatelessWidget {
                 image: AssetImage(tCarImage),
                 fit: BoxFit.fitHeight,
                 colorFilter: ColorFilter.mode(
-                  Colors.black.withOpacity(0.65),
+                  Colors.black.withValues(alpha: 0.65),
                   BlendMode.darken,
                 ),
               ),

@@ -1,12 +1,7 @@
 import 'package:car_rental_app/screens/login_screen.dart';
+import 'package:car_rental_app/utils/apptheme/themesettings.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
-const Color tPrimaryColor = Color.fromARGB(255, 0, 0, 0);
-const Color tLightBackground = Colors.white;
-const Color tDarkTextColor = Color(0xFF1E1E2C);
-const Color tCardColor = Color(0xFFF0F0F0);
-const Color tDividerColor = Color(0xFFD0D0D0);
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -21,6 +16,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late String _userName;
   late String _userEmail;
   String _userPhone = 'Not Set';
+  String? _verificationId;
 
   final String _staticProfileImage = "images/Profile.jpg";
 
@@ -32,349 +28,191 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _userPhone = _user?.phoneNumber ?? 'Not Set';
   }
 
-  void _editField(String label, String currentValue, Function(String) onSave) {
-    TextEditingController controller = TextEditingController(
-      text: currentValue,
-    );
-
-    showDialog(
-      context: context,
-      builder: (_) {
-        return AlertDialog(
-          backgroundColor: tLightBackground,
-          title: Text(
-            "Edit $label",
-            style: const TextStyle(color: tDarkTextColor),
-          ),
-          content: TextField(
-            controller: controller,
-            style: TextStyle(color: const Color.fromARGB(221, 24, 23, 23)),
-            decoration: const InputDecoration(
-              hintText: "Enter new value",
-              focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: tPrimaryColor),
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: tPrimaryColor),
-              onPressed: () {
-                if (controller.text.trim().isNotEmpty) {
-                  setState(() => onSave(controller.text.trim()));
-                }
-                Navigator.pop(context);
-              },
-              child: const Text("Save", style: TextStyle(color: Colors.white)),
-            ),
-          ],
+  Future<void> _verifyPhoneNumber(String phoneNumber) async {
+    await FirebaseAuth.instance.verifyPhoneNumber(
+      phoneNumber: phoneNumber,
+      verificationCompleted: (PhoneAuthCredential credential) async {
+        await _user?.updatePhoneNumber(credential);
+        setState(() => _userPhone = phoneNumber);
+      },
+      verificationFailed: (FirebaseAuthException e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error: ${e.message}")),
         );
       },
+      codeSent: (String verificationId, int? resendToken) {
+        _verificationId = verificationId;
+        _showOTPDialog(phoneNumber);
+      },
+      codeAutoRetrievalTimeout: (String verificationId) {
+        _verificationId = verificationId;
+      },
+    );
+  }
+
+  void _showOTPDialog(String phoneNumber) {
+    TextEditingController otpController = TextEditingController();
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: ThemeSettings.cardColor,
+        title: Text("Enter OTP",
+            style: TextStyle(color: ThemeSettings.mainTextColor)),
+        content: TextField(
+          controller: otpController,
+          keyboardType: TextInputType.number,
+          maxLength: 6,
+          style:
+              TextStyle(color: ThemeSettings.mainTextColor, letterSpacing: 8),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel")),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+            onPressed: () async {
+              try {
+                PhoneAuthCredential credential = PhoneAuthProvider.credential(
+                  verificationId: _verificationId!,
+                  smsCode: otpController.text.trim(),
+                );
+                await _user?.updatePhoneNumber(credential);
+                Navigator.pop(context);
+                setState(() => _userPhone = phoneNumber);
+              } catch (e) {
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(const SnackBar(content: Text("Invalid OTP")));
+              }
+            },
+            child: const Text("Verify", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _editField(String label, String currentValue, Function(String) onSave) {
+    TextEditingController controller =
+        TextEditingController(text: currentValue);
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: ThemeSettings.cardColor,
+        title: Text("Edit $label",
+            style: TextStyle(color: ThemeSettings.mainTextColor)),
+        content: TextField(
+          controller: controller,
+          keyboardType: label == "Phone Number"
+              ? TextInputType.phone
+              : TextInputType.text,
+          style: TextStyle(color: ThemeSettings.mainTextColor),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel")),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+            onPressed: () {
+              String newValue = controller.text.trim();
+              if (newValue.isNotEmpty) {
+                if (label == "Phone Number") {
+                  Navigator.pop(context);
+                  _verifyPhoneNumber(newValue);
+                } else {
+                  setState(() => onSave(newValue));
+                  Navigator.pop(context);
+                }
+              }
+            },
+            child: const Text("Save", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
     );
   }
 
   Future<void> _saveChanges() async {
     if (_user == null) return;
-
     try {
-      bool nameUpdated = false;
-      bool emailChangeInitiated = false;
+      if (_user?.displayName != _userName)
+        await _user?.updateDisplayName(_userName);
+      if (_user?.email != _userEmail) await _user?.updateEmail(_userEmail);
 
-      if (_user.displayName != _userName) {
-        await _user.updateDisplayName(_userName);
-        nameUpdated = true;
-      }
-
-      if (_user.email != _userEmail) {
-        await _updateEmail();
-        emailChangeInitiated = true;
-      }
-
-      if (_user.phoneNumber != _userPhone && _userPhone != 'Not Set') {}
-
-      await _user.reload();
-
-      if (mounted) {
-        String successMessage = "Profile saved successfully!";
-
-        if (emailChangeInitiated) {
-          successMessage =
-              "Check your inbox! An email verification link has been sent to $_userEmail.";
-        } else if (nameUpdated) {
-          successMessage = "Name updated successfully!";
-        }
-
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(successMessage)));
-
-        if (!emailChangeInitiated) {
-          Navigator.of(context).pop();
-        }
-      }
-    } on FirebaseAuthException catch (e) {
-      String message = "Failed to update profile: ${e.message}";
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(message)));
-      }
-      print("Firebase update error: ${e.code}");
+      await _user?.reload();
+      ScaffoldMessenger.of(context)
+          .showSnackBar(const SnackBar(content: Text("Profile Updated!")));
+    } catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text("Error: $e")));
     }
   }
 
   void _performLogout(BuildContext context) async {
     await FirebaseAuth.instance.signOut();
-
-    if (context.mounted) {
+    if (context.mounted)
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
-        (Route<dynamic> route) => false,
-      );
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Logged out successfully!")));
-    }
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+          (r) => false);
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_user == null) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-
     return Scaffold(
-      backgroundColor: tLightBackground,
+      backgroundColor: ThemeSettings.scaffoldColor,
       appBar: AppBar(
-        backgroundColor: tLightBackground,
-        elevation: 1,
-        centerTitle: true,
-        iconTheme: const IconThemeData(color: tDarkTextColor),
-        title: const Text(
-          "My Profile",
-          style: TextStyle(color: tDarkTextColor, fontWeight: FontWeight.bold),
-        ),
+        backgroundColor: ThemeSettings.appBarColor,
+        title: Text("My Profile",
+            style: TextStyle(color: ThemeSettings.mainTextColor)),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 60),
+        padding: const EdgeInsets.all(25),
         child: Column(
           children: [
-            _buildProfileHeader(),
+            CircleAvatar(
+                radius: 60, backgroundImage: AssetImage(_staticProfileImage)),
             const SizedBox(height: 40),
-
-            _buildEditableInfoField(
-              Icons.person_outline,
-              "Full Name",
-              _userName,
-              (v) => _userName = v,
-            ),
-            _buildEditableInfoField(
-              Icons.email_outlined,
-              "Email Address",
-              _userEmail,
-              (v) => _userEmail = v,
-            ),
-            _buildEditableInfoField(
-              Icons.phone_outlined,
-              "Phone Number",
-              _userPhone,
-              (v) => _userPhone = v,
-            ),
-
+            _buildInfoTile(
+                Icons.person, "Full Name", _userName, (v) => _userName = v),
+            _buildInfoTile(Icons.email, "Email Address", _userEmail,
+                (v) => _userEmail = v),
+            _buildInfoTile(
+                Icons.phone, "Phone Number", _userPhone, (v) => _userPhone = v),
             const SizedBox(height: 40),
-
-            _buildActionButton(
-              text: "Save Changes",
-              icon: Icons.save_outlined,
-              color: tPrimaryColor,
-              onPressed: _saveChanges,
-            ),
-
+            _buildButton("Save Changes", Colors.redAccent, _saveChanges),
             const SizedBox(height: 15),
-
-            _buildActionButton(
-              text: "Logout",
-              icon: Icons.logout,
-              color: Colors.red.shade600,
-              onPressed: () => _showLogoutDialog(context),
-            ),
+            _buildButton("Logout", Colors.grey, () => _performLogout(context)),
           ],
         ),
       ),
     );
   }
 
-  Future<void> _updateEmail() async {
-    if (_user == null || _userEmail == _user.email) {
-      return;
-    }
-
-    try {
-      await _user.verifyBeforeUpdateEmail(_userEmail);
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Verification link sent to the new email ($_userEmail). Please check your inbox and click the link to confirm the change.',
-            ),
-            duration: const Duration(seconds: 8),
-          ),
-        );
-      }
-    } on FirebaseAuthException catch (e) {
-      String message = "Failed to update email. ";
-      if (e.code == 'requires-recent-login') {
-        message =
-            "Email change failed: Please log in again recently and try immediately after.";
-      } else if (e.code == 'invalid-email') {
-        message = "The new email address format is invalid.";
-      } else if (e.code == 'email-already-in-use') {
-        message = "This email is already in use by another account.";
-      }
-
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(message)));
-        setState(() {
-          _userEmail = _user.email ?? 'N/A';
-        });
-      }
-      print("Firebase Email Update Error: ${e.code}");
-    }
-  }
-
-  Widget _buildProfileHeader() {
-    return Column(
-      children: [
-        CircleAvatar(
-          radius: 60,
-          backgroundColor: tCardColor,
-          backgroundImage: AssetImage(_staticProfileImage),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          _userName,
-          style: const TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: tDarkTextColor,
-          ),
-        ),
-      ],
+  Widget _buildInfoTile(
+      IconData icon, String label, String value, Function(String) onSave) {
+    return ListTile(
+      leading: Icon(icon, color: Colors.redAccent),
+      title: Text(label,
+          style:
+              TextStyle(color: ThemeSettings.secondaryTextColor, fontSize: 12)),
+      subtitle: Text(value,
+          style: TextStyle(color: ThemeSettings.mainTextColor, fontSize: 16)),
+      trailing: Icon(Icons.edit, color: Colors.redAccent, size: 20),
+      onTap: () => _editField(label, value, onSave),
     );
   }
 
-  Widget _buildEditableInfoField(
-    IconData icon,
-    String label,
-    String value,
-    Function(String) onSave,
-  ) {
-    return Column(
-      children: [
-        InkWell(
-          onTap: () => _editField(label, value, onSave),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 15),
-            child: Row(
-              children: [
-                Icon(icon, color: tPrimaryColor, size: 20),
-                const SizedBox(width: 15),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        label,
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        value,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: tDarkTextColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const Icon(Icons.edit_outlined, color: tPrimaryColor, size: 20),
-              ],
-            ),
-          ),
-        ),
-        Divider(color: tDividerColor),
-      ],
-    );
-  }
-
-  Widget _buildActionButton({
-    required String text,
-    required IconData icon,
-    required Color color,
-    required VoidCallback onPressed,
-  }) {
+  Widget _buildButton(String text, Color color, VoidCallback onTap) {
     return SizedBox(
       width: double.infinity,
       height: 48,
-      child: ElevatedButton.icon(
-        icon: Icon(icon, color: Colors.white, size: 20),
-        label: Text(
-          text,
-          style: const TextStyle(fontSize: 16, color: Colors.white),
-        ),
-        style: ElevatedButton.styleFrom(
-          backgroundColor: color,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-        onPressed: onPressed,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(backgroundColor: color),
+        onPressed: onTap,
+        child: Text(text, style: const TextStyle(color: Colors.white)),
       ),
-    );
-  }
-
-  void _showLogoutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (_) {
-        return AlertDialog(
-          backgroundColor: tLightBackground,
-          title: const Text(
-            "Confirm Logout",
-            style: TextStyle(color: tDarkTextColor),
-          ),
-          content: Text(
-            "Are you sure you want to log out?",
-            style: TextStyle(color: Colors.grey[800]),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Cancel", style: TextStyle(color: Colors.grey[600])),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.red[600]),
-              onPressed: () {
-                Navigator.pop(context);
-                _performLogout(context);
-              },
-              child: const Text(
-                "Logout",
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
-        );
-      },
     );
   }
 }

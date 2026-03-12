@@ -69,7 +69,7 @@ class HomeHeader extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -84,21 +84,22 @@ class HomeHeader extends StatelessWidget {
     );
   }
 
-  Widget _filterChip(String label, String value) {
-    bool isSelected = currentSort == value;
-    return GestureDetector(
-      onTap: () => onSortChange(value),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.redAccent : Colors.white24,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          label,
-          style: const TextStyle(color: Colors.white, fontSize: 11),
-        ),
-      ),
-    );
-  }
+  //   Widget _filterChip(String label, String value) {
+  //     bool isSelected = currentSort == value;
+  //     return GestureDetector(
+  //       onTap: () => onSortChange(value),
+  //       child: Container(
+  //         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+  //         decoration: BoxDecoration(
+  //           color: isSelected ? Colors.redAccent : Colors.white24,
+  //           borderRadius: BorderRadius.circular(20),
+  //         ),
+  //         child: Text(
+  //           label,
+  //           style: const TextStyle(color: Colors.white, fontSize: 11),
+  //         ),
+  //       ),
+  //     );
+  //   }
+  // }
 }
