@@ -7,7 +7,12 @@ class NotificationService {
   static final FlutterLocalNotificationsPlugin _notificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
+  static bool _initialized = false; // Prevents double-init
+
   static Future<void> init() async {
+    if (_initialized) return; // Guard against multiple calls
+    _initialized = true;
+
     tz.initializeTimeZones();
 
     // Pakistan Timezone setup
@@ -34,15 +39,22 @@ class NotificationService {
     );
 
     // Permission request for Android 13+
-    final androidPlugin = _notificationsPlugin
-        .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >();
+    final androidPlugin =
+        _notificationsPlugin.resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
 
     if (androidPlugin != null) {
-      // It's good practice to check if these methods exist on the current OS version
-      await androidPlugin.requestNotificationsPermission();
-      await androidPlugin.requestExactAlarmsPermission();
+      try {
+        await androidPlugin.requestNotificationsPermission();
+      } catch (e) {
+        debugPrint("Notification permission error: $e");
+      }
+
+      try {
+        await androidPlugin.requestExactAlarmsPermission();
+      } catch (e) {
+        debugPrint("Exact alarm permission error: $e");
+      }
     }
   }
 

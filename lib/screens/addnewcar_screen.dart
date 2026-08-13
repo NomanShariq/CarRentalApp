@@ -77,8 +77,8 @@ class _AddNewCarScreenState extends State<AddNewCarScreen> {
       // 1. Upload Image
       String fileName = "car_${DateTime.now().millisecondsSinceEpoch}.jpg";
       Reference storageRef = FirebaseStorage.instance.ref().child(
-        'car_images/$fileName',
-      );
+            'car_images/$fileName',
+          );
 
       String downloadUrl;
       if (kIsWeb) {
@@ -123,6 +123,7 @@ class _AddNewCarScreenState extends State<AddNewCarScreen> {
         Navigator.pop(context);
       }
     } catch (e) {
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Firebase Error: $e'),
@@ -196,11 +197,13 @@ class _AddNewCarScreenState extends State<AddNewCarScreen> {
                             decimal: true,
                           ),
                           validator: (value) {
-                            if (value == null || value.isEmpty)
+                            if (value == null || value.isEmpty) {
                               return 'Required';
+                            }
                             final r = double.tryParse(value);
-                            if (r == null || r < 1.0 || r > 5.0)
+                            if (r == null || r < 1.0 || r > 5.0) {
                               return 'Enter 1.0 to 5.0';
+                            }
                             return null;
                           },
                           isDark: isDark,
@@ -360,8 +363,7 @@ class _AddNewCarScreenState extends State<AddNewCarScreen> {
           filled: true,
           fillColor: ThemeSettings.cardColor,
         ),
-        validator:
-            validator ??
+        validator: validator ??
             (value) => (value == null || value.isEmpty) ? 'Required' : null,
       ),
     );

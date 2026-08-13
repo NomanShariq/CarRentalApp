@@ -22,7 +22,8 @@ class CarCards {
               // Shows a loading spinner while the image downloads
               loadingBuilder: (context, child, loadingProgress) {
                 if (loadingProgress == null) return child;
-                return Center(child: CircularProgressIndicator(strokeWidth: 2));
+                return const Center(
+                    child: CircularProgressIndicator(strokeWidth: 2));
               },
               // Shows an icon if the URL is 404 or internet is down
               errorBuilder: (context, error, stackTrace) =>

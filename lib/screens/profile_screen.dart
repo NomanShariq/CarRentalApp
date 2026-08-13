@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:car_rental_app/screens/login_screen.dart';
 import 'package:car_rental_app/utils/apptheme/themesettings.dart';
 import 'package:flutter/material.dart';
@@ -137,8 +139,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _saveChanges() async {
     if (_user == null) return;
     try {
-      if (_user?.displayName != _userName)
+      if (_user?.displayName != _userName) {
         await _user?.updateDisplayName(_userName);
+      }
       if (_user?.email != _userEmail) await _user?.updateEmail(_userEmail);
 
       await _user?.reload();
@@ -152,10 +155,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _performLogout(BuildContext context) async {
     await FirebaseAuth.instance.signOut();
-    if (context.mounted)
+    if (context.mounted) {
       Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => const LoginScreen()),
           (r) => false);
+    }
   }
 
   @override
@@ -199,7 +203,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               TextStyle(color: ThemeSettings.secondaryTextColor, fontSize: 12)),
       subtitle: Text(value,
           style: TextStyle(color: ThemeSettings.mainTextColor, fontSize: 16)),
-      trailing: Icon(Icons.edit, color: Colors.redAccent, size: 20),
+      trailing: const Icon(Icons.edit, color: Colors.redAccent, size: 20),
       onTap: () => _editField(label, value, onSave),
     );
   }

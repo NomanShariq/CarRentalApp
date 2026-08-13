@@ -23,7 +23,7 @@ class WelcomeScreen extends StatelessWidget {
             ),
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: AssetImage(tCarImage),
+                image: const AssetImage(tCarImage),
                 fit: BoxFit.fitHeight,
                 colorFilter: ColorFilter.mode(
                   Colors.black.withValues(alpha: 0.65),
@@ -31,17 +31,16 @@ class WelcomeScreen extends StatelessWidget {
                 ),
               ),
             ),
-
-            child: SafeArea(
+            child: const SafeArea(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 20),
-                  const Text(
+                  SizedBox(height: 20),
+                  Text(
                     'Welcome to',
                     style: TextStyle(fontSize: 18, color: tLightColor),
                   ),
-                  const Text(
+                  Text(
                     'RENTALX',
                     style: TextStyle(
                       fontSize: 56,
@@ -51,8 +50,8 @@ class WelcomeScreen extends StatelessWidget {
                       fontFamily: 'sans-serif',
                     ),
                   ),
-                  const Spacer(),
-                  const FloatingInfoCard(),
+                  Spacer(),
+                  FloatingInfoCard(),
                 ],
               ),
             ),
@@ -84,7 +83,7 @@ class FloatingInfoCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(50),
           ),
         ),
-        child: Text('Get Started'),
+        child: const Text('Get Started'),
       ),
     );
   }

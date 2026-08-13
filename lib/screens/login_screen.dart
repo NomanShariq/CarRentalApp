@@ -227,7 +227,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 if (!context.mounted) return;
                 ScaffoldMessenger.of(
                   context,
-                ).showSnackBar(SnackBar(content: Text("Done!")));
+                ).showSnackBar(const SnackBar(content: Text("Done!")));
               } catch (e) {
                 debugPrint(e.toString());
               }
@@ -306,7 +306,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildSocialButton(
-    IconData iconData,
+    FaIconData iconData,
     Color color,
     VoidCallback onPressed,
   ) {

@@ -123,13 +123,13 @@ class _BookingHistoryScreenState extends State<BookingHistoryScreen> {
                 .snapshots(),
             builder: (context, snapshot) {
               if (snapshot.hasError) {
-                return Center(
+                return const Center(
                   child: Padding(
-                    padding: const EdgeInsets.all(20),
+                    padding: EdgeInsets.all(20),
                     child: Text(
                       "Building Index... Please wait 5 minutes.\n\nCheck your browser to confirm the index is 'Building'.",
                       textAlign: TextAlign.center,
-                      style: const TextStyle(color: Colors.redAccent),
+                      style: TextStyle(color: Colors.redAccent),
                     ),
                   ),
                 );
